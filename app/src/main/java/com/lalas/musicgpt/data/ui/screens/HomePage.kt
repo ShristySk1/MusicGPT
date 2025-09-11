@@ -129,7 +129,7 @@ fun HomePage(
                     .align(Alignment.BottomCenter)
                     .padding(
                         bottom = if (isPlayerVisible) 105.dp else 16.dp
-                    ),
+                    )   // pushes up when keyboard appears,
             ) {
                 CreateSongInputEnhanced(
                     showInput = showInput,
