@@ -55,8 +55,8 @@ fun FloatingPlayerBar(
                 modifier = Modifier
                     .fillMaxSize()
                     .background(
-
                         color = Color(0x661D2125),
+                        shape = RoundedCornerShape(16.dp)
                     )
                     .border(
                         width = 1.dp,

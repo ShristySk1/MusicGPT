@@ -55,13 +55,11 @@ import kotlin.random.Random
 fun HomePage(
     tasks: List<GenerationTask>,
     onTaskClick: (GenerationTask) -> Unit,
-    onCreateClick: (String) -> Unit,
     onSkipClick: (GenerationTask) -> Unit,
     isPlayerVisible: Boolean = false,
-    currentPlayingTaskId: String? = null
+    currentPlayingTaskId: String? = null,
+    showCreateButton: Boolean = true // Add parameter to control create button visibility
 ) {
-    var showInput by remember { mutableStateOf(false) }
-
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -93,50 +91,33 @@ fun HomePage(
             )
         )
 
-        Box(
-            Modifier
-                .fillMaxWidth()
-                .weight(1f)
-        ) {
-            // Task List
-            LazyColumn(
-                modifier = Modifier.fillMaxWidth(),
-                verticalArrangement = Arrangement.spacedBy(12.dp),
-                contentPadding = PaddingValues(
-                    top = 16.dp,
-                    // Add extra bottom padding when player is visible
-                    bottom = if (isPlayerVisible) 96.dp else 16.dp
-                )
-            ) {
-                items(tasks) { task ->
-                    TaskCard(
-                        task = task,
-                        isCurrentlyPlaying = currentPlayingTaskId == task.id && isPlayerVisible,
-                        onSkipClick = { onSkipClick(task) },
-                        onClick = {
-                            // Only allow click if task is completed (progress = 100)
-                            if (task.progress == 100) {
-                                onTaskClick(task)
-                            }
-                        }
-                    )
+        // Task List - Now fills the entire remaining space
+        LazyColumn(
+            modifier = Modifier.fillMaxWidth(),
+            verticalArrangement = Arrangement.spacedBy(12.dp),
+            contentPadding = PaddingValues(
+                top = 16.dp,
+                // Add bottom padding based on what's visible
+                bottom = when {
+                    // Player visible: need space for player
+                    isPlayerVisible -> 96.dp // Player height + some spacing
+                    // Create button handled externally, but still need some bottom padding
+                    showCreateButton -> 80.dp // Space for floating create button
+                    // No floating elements
+                    else -> 16.dp
                 }
-            }
-
-            // Create Button - adjust position when player is visible
-            Box(
-                modifier = Modifier
-                    .align(Alignment.BottomCenter)
-                    .padding(
-                        bottom = if (isPlayerVisible) 105.dp else 16.dp
-                    )   // pushes up when keyboard appears,
-            ) {
-                CreateSongInputEnhanced(
-                    showInput = showInput,
-                    onShowInputChange = { showInput = it },
-                    onCreateClick = { prompt ->
-                        onCreateClick(prompt)
-                        showInput = false
+            )
+        ) {
+            items(tasks) { task ->
+                TaskCard(
+                    task = task,
+                    isCurrentlyPlaying = currentPlayingTaskId == task.id && isPlayerVisible,
+                    onSkipClick = { onSkipClick(task) },
+                    onClick = {
+                        // Only allow click if task is completed (progress = 100)
+                        if (task.progress == 100) {
+                            onTaskClick(task)
+                        }
                     }
                 )
             }
@@ -341,147 +322,13 @@ fun ClickableText(
     )
 }
 
-// Enhanced version with functional input
+// Enhanced version with functional input - Keep this for external use
 @Composable
 fun CreateSongInputEnhanced(
-    showInput: Boolean,
     onShowInputChange: (Boolean) -> Unit,
-    onCreateClick: (String) -> Unit
 ) {
-    var inputText by remember { mutableStateOf("") }
-    val focusRequester = remember { FocusRequester() }
 
-    val gradientColors = listOf(
-        Color(0xFFFF8504),
-        Color(0xFF990287),
-    )
 
-    val gradientBrush = Brush.linearGradient(
-        colors = gradientColors
-    )
-
-    // Auto-focus when input becomes visible
-    LaunchedEffect(showInput) {
-        if (showInput) {
-            focusRequester.requestFocus()
-        }
-    }
-
-    AnimatedContent(
-        targetState = showInput,
-        label = "CreateTransition"
-    ) { expanded ->
-        if (expanded) {
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth(0.9f)
-                    .height(52.dp)
-                    // Multiple glow layers for more dramatic effect
-                    .drawBehind {
-                        // Outer glow
-                        drawRoundRect(
-                            brush = gradientBrush,
-                            cornerRadius = CornerRadius(26.dp.toPx()),
-                            style = Stroke(width = 12.dp.toPx()),
-                            alpha = 0.1f,
-                            blendMode = BlendMode.Screen
-                        )
-                        // Middle glow
-                        drawRoundRect(
-                            brush = gradientBrush,
-                            cornerRadius = CornerRadius(26.dp.toPx()),
-                            style = Stroke(width = 6.dp.toPx()),
-                            alpha = 0.3f,
-                            blendMode = BlendMode.Screen
-                        )
-                        // Inner glow
-                        drawRoundRect(
-                            brush = gradientBrush,
-                            cornerRadius = CornerRadius(26.dp.toPx()),
-                            style = Stroke(width = 3.dp.toPx()),
-                            alpha = 0.6f
-                        )
-                        // Sharp border
-                        drawRoundRect(
-                            brush = gradientBrush,
-                            cornerRadius = CornerRadius(26.dp.toPx()),
-                            style = Stroke(width = 1.dp.toPx())
-                        )
-                    }
-                    .background(
-                        Color(0xff16191C),
-                        RoundedCornerShape(26.dp)
-                    ),
-                contentAlignment = Alignment.CenterStart
-            ) {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 16.dp)
-                ) {
-                    Icon(
-                        painter = painterResource(R.drawable.ic_add),
-                        contentDescription = null,
-                        tint = Color.Unspecified
-                    )
-
-                    BasicTextField(
-                        value = inputText,
-                        onValueChange = { inputText = it },
-                        singleLine = true,
-                        textStyle = TextStyle(
-                            color = Color.White,
-                            fontSize = 16.sp,
-                            fontWeight = FontWeight.Medium
-                        ),
-                        keyboardOptions = KeyboardOptions(
-                            imeAction = ImeAction.Send
-                        ),
-                        keyboardActions = KeyboardActions(
-                            onSend = {
-                                if (inputText.isNotBlank()) {
-                                    onCreateClick(inputText.trim())
-                                    inputText = ""
-                                }
-                            }
-                        ),
-                        modifier = Modifier
-                            .weight(1f)
-                            .padding(horizontal = 12.dp)
-                            .focusRequester(focusRequester),
-                        decorationBox = { innerTextField ->
-                            Box {
-                                if (inputText.isEmpty()) {
-                                    Text(
-                                        "Create song",
-                                        color = Color(0xff777A80),
-                                        fontSize = 16.sp
-                                    )
-                                }
-                                innerTextField()
-                            }
-                        }
-                    )
-
-                    IconButton(
-                        onClick = {
-                            if (inputText.isNotBlank()) {
-                                onCreateClick(inputText.trim())
-                                inputText = ""
-                            }
-                        }
-                    ) {
-                        Icon(
-                            painter = painterResource(R.drawable.ic_send),
-                            contentDescription = "Send",
-                            tint = Color.Unspecified
-                        )
-                    }
-                }
-            }
-        } else {
             Surface(
                 onClick = { onShowInputChange(true) },
                 shape = RoundedCornerShape(25.dp),
@@ -508,70 +355,5 @@ fun CreateSongInputEnhanced(
                         fontSize = 16.sp
                     )
                 }
-            }
-        }
     }
-}
-
-// Example usage in your ViewModel or main composable:
-@Composable
-fun ExampleUsage() {
-    var tasks by remember { mutableStateOf<List<GenerationTask>>(emptyList()) }
-    val scope = rememberCoroutineScope()
-    var currentPlayingTaskId by remember { mutableStateOf<String?>(null) }
-
-    HomePage(
-        tasks = tasks,
-        currentPlayingTaskId = currentPlayingTaskId,
-        onTaskClick = { task ->
-            // Handle task click - only called for completed tasks
-            currentPlayingTaskId = task.id
-        },
-        onCreateClick = { prompt ->
-            // Create new task with proper title and description from prompt
-            val words = prompt.split(" ").filter { it.isNotBlank() }
-            val title = words.take(4).joinToString(" ") // First 3-4 words for title
-
-            val newTask = GenerationTask(
-                id = UUID.randomUUID().toString(),
-                title = title,
-                originalDescription = prompt, // Store original prompt
-                progress = 0,
-                queueCount = Random.nextInt(15000, 25000), // Random initial queue count
-                colorStart = Color(0xFFFF8504),
-                colorEnd = Color(0xFF990287)
-            )
-
-            tasks = tasks + newTask
-
-            // Simulate progress updates with decreasing queue count
-            scope.launch {
-                for (progress in 0..100 step 1) {
-                    delay(100) // Simulate work
-                    tasks = tasks.map { task ->
-                        if (task.id == newTask.id) {
-                            val newQueueCount = if (progress > 0) {
-                                // Gradually decrease queue count as progress increases
-                                val remainingRatio = (100 - progress) / 100f
-                                (newTask.queueCount!! * remainingRatio).toInt()
-                            } else null
-
-                            task.copy(
-                                progress = progress,
-                                queueCount = newQueueCount
-                            )
-                        } else task
-                    }
-                }
-            }
-        },
-        onSkipClick = { task ->
-            // Handle skip functionality - immediately complete the task
-            tasks = tasks.map {
-                if (it.id == task.id) it.copy(progress = 100, queueCount = 0)
-                else it
-            }
-        },
-        isPlayerVisible = currentPlayingTaskId != null
-    )
 }
