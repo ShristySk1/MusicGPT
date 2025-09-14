@@ -1,40 +1,42 @@
 package com.lalas.musicgpt.ui.screens
-
-import androidx.compose.animation.AnimatedContent
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.text.BasicTextField
-import androidx.compose.foundation.text.KeyboardActions
-import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material.ripple.rememberRipple
-import androidx.compose.material3.*
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.drawBehind
-import androidx.compose.ui.focus.FocusRequester
-import androidx.compose.ui.focus.focusRequester
-import androidx.compose.ui.geometry.CornerRadius
-import androidx.compose.ui.graphics.BlendMode
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.drawscope.Stroke
-import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.text.withStyle
@@ -43,12 +45,6 @@ import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import com.lalas.musicgpt.R
 import com.lalas.musicgpt.data.GenerationTask
-import kotlinx.coroutines.delay
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.ui.text.style.TextAlign
-import kotlinx.coroutines.launch
-import java.util.UUID
 import kotlin.random.Random
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -241,49 +237,39 @@ fun TaskCard(
 
                     // Dynamic description based on progress
                     val displayDescription = when {
-                        task.progress == 0 -> "Starting AI audio engine"
-                        task.progress in 1..99 -> {
+                        task.progress in 0..26 -> "Starting AI audio engine..."
+                        task.progress in 27..99 -> {
                             val queueCount = task.queueCount ?: (Random.nextInt(15, 25) * 1000)
                             "${(queueCount / 1000f).toInt()}.${(queueCount % 1000) / 100}K users in queue skip"
                         }
                         else -> task.originalDescription
                     }
 
-                    if (task.progress in 1..99 && displayDescription.contains("skip")) {
-                        // Create clickable "skip" text
+                    if (task.progress in 27..99 && displayDescription.contains("skip")) {
+                        // Create styled "skip" text (non-clickable)
                         val annotatedString = buildAnnotatedString {
                             val text = displayDescription
                             val skipIndex = text.indexOf("skip")
 
                             append(text.substring(0, skipIndex))
-                            pushStringAnnotation(tag = "skip", annotation = "skip_action")
                             withStyle(
                                 style = SpanStyle(
-                                    textDecoration = TextDecoration.Underline,
-//                                    color = Color(0xFF64B5F6)
+                                    textDecoration = TextDecoration.Underline, // keep underline
+                                    color = Color.Gray
                                 )
                             ) {
                                 append("skip")
                             }
-                            pop()
+                            append(text.substring(skipIndex + 4)) // rest of text after "skip"
                         }
 
-                        ClickableText(
+                        Text(
                             text = annotatedString,
                             modifier = Modifier.padding(start = 16.dp),
-                            style = TextStyle(
-                                color = Color.Gray,
-                                fontSize = 14.sp
-                            ),
-                            onClick = { offset ->
-                                annotatedString.getStringAnnotations(
-                                    tag = "skip",
-                                    start = offset,
-                                    end = offset
-                                ).firstOrNull()?.let {
-                                    onSkipClick()
-                                }
-                            }
+                            fontSize = 14.sp,
+                            maxLines = 1,
+                            color = Color.Gray,
+                            overflow = TextOverflow.Ellipsis
                         )
                     } else {
                         Text(
@@ -295,6 +281,7 @@ fun TaskCard(
                             overflow = TextOverflow.Ellipsis
                         )
                     }
+
                 }
 
                 // More options - only show for completed tasks
@@ -331,18 +318,19 @@ fun ClickableText(
 fun CreateSongInputEnhanced(
     onShowInputChange: (Boolean) -> Unit,
 ) {
-
-
             Surface(
                 onClick = { onShowInputChange(true) },
                 shape = RoundedCornerShape(25.dp),
-                color = Color(0x1AFFFFFF),
                 contentColor = Color.White,
+                color = Color(0xE6000000),
+                shadowElevation = 16.dp
             ) {
                 Row(
                     horizontalArrangement = Arrangement.spacedBy(8.dp),
                     verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier.padding(
+                    modifier = Modifier
+                        .background(color = Color(0x1AFFFFFF))
+                        .padding(
                         top = 8.dp,
                         bottom = 8.dp,
                         start = 16.dp,

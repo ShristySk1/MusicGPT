@@ -1,6 +1,7 @@
 package com.lalas.musicgpt
 
 import android.content.ComponentName
+import android.content.Context
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.FastOutLinearInEasing
 import androidx.compose.animation.core.FastOutSlowInEasing
@@ -68,12 +69,11 @@ import androidx.media3.common.PlaybackException
 import androidx.media3.common.Player
 import androidx.media3.session.MediaController
 import androidx.media3.session.SessionToken
-import com.lalas.musicgpt.data.MusicGPTViewModel
+import com.lalas.musicgpt.ui.MusicGPTViewModel
 import com.lalas.musicgpt.ui.components.FloatingPlayerBar
-import com.lalas.musicgpt.ui.components.GenerationScreen
 import com.lalas.musicgpt.ui.screens.CreateSongInputEnhanced
 import com.lalas.musicgpt.ui.screens.HomePage
-import com.lalas.musicgpt.ui.service.MusicService
+import com.lalas.musicgpt.data.service.MusicService
 import kotlinx.coroutines.guava.await
 
 @OptIn(ExperimentalLayoutApi::class)
@@ -120,7 +120,6 @@ fun MusicGPTApp() {
     //music player
     var controller by remember { mutableStateOf<MediaController?>(null) }
     val context = LocalContext.current
-    // In the LaunchedEffect block in MusicGPTApp
     LaunchedEffect(Unit) {
         val sessionToken = SessionToken(context, ComponentName(context, MusicService::class.java))
         val controllerFuture = MediaController.Builder(context, sessionToken).buildAsync()
@@ -140,12 +139,15 @@ fun MusicGPTApp() {
                                 viewModel.resetPlayerState()
                             }
                         }
+
                         Player.STATE_ENDED -> {
                             viewModel.nextTrack()
                         }
+
                         Player.STATE_BUFFERING -> {
                             viewModel.setLoadingState(true)
                         }
+
                         Player.STATE_READY -> {
                             viewModel.setLoadingState(false)
                             // Auto-play when ready
@@ -179,11 +181,14 @@ fun MusicGPTApp() {
                 try {
                     // Create media item for the requested track
                     val mediaItem = MediaItem.Builder()
-                        .setUri(track.audioUrl ?: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3")
+                        .setUri(
+                            track.audioUrl?.toRawUrl(context)
+                                ?: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3"
+                        )
                         .setMediaId(track.id)
                         .setMediaMetadata(
                             MediaMetadata.Builder()
-                                .setTitle(track.description)
+                                .setTitle(track.title)
                                 .setArtist("AI Generated")
                                 .build()
                         )
@@ -207,6 +212,7 @@ fun MusicGPTApp() {
         }
     }
 
+
 // Add a separate LaunchedEffect for play/pause control
     LaunchedEffect(uiState.isPlaying) {
         controller?.let { mediaController ->
@@ -220,15 +226,6 @@ fun MusicGPTApp() {
                 // Handle playback control errors
                 println("Error controlling playback: ${e.message}")
             }
-        }
-    }
-
-// Optional: Add listener for MediaController state changes to keep ViewModel in sync
-    LaunchedEffect(controller) {
-        controller?.let { mediaController ->
-            // You might want to add a listener here to sync the actual player state
-            // back to your ViewModel when the user interacts with the notification
-            // This would require implementing a Player.Listener
         }
     }
 
@@ -261,10 +258,9 @@ fun MusicGPTApp() {
                                     if (task.progress == 100) {
                                         viewModel.playTrack(task)
                                     }
-                                    // Note: Tasks in progress are not clickable due to UI state
                                 },
                                 onSkipClick = { task ->
-//                                    viewModel.skipTask(task)
+
                                 },
                                 isPlayerVisible = uiState.isPlayerVisible,
                                 currentPlayingTaskId = uiState.currentTrack?.id,
@@ -277,12 +273,6 @@ fun MusicGPTApp() {
                             3 -> EmptyScreen("Profile", "👤")
                         }
                     }
-
-                    "generation" -> GenerationScreen(
-                        currentTask = uiState.currentTask,
-                        progress = uiState.generationProgress,
-                        onBack = { viewModel.goHome() }
-                    )
                 }
             }
 
@@ -297,7 +287,6 @@ fun MusicGPTApp() {
         }
 
         // Floating Create Button - positioned above player and bottom nav
-        // Only show on home screen, AI tab, and when input is not shown
         AnimatedVisibility(
             visible = uiState.currentScreen == "home" && selectedTab == 0 && !showCreateInput,
             enter = slideInVertically(
@@ -403,7 +392,7 @@ fun MusicGPTApp() {
                         horizontalArrangement = Arrangement.SpaceBetween,
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(horizontal = 16.dp)
+                            .padding(horizontal = 8.dp)
                     ) {
                         IconButton(
                             onClick = {
@@ -441,7 +430,7 @@ fun MusicGPTApp() {
                             ),
                             modifier = Modifier
                                 .weight(1f)
-                                .padding(horizontal = 12.dp)
+                                .padding(horizontal = 6.dp)
                                 .focusRequester(focusRequester),
                             decorationBox = { innerTextField ->
                                 Box {
@@ -520,6 +509,16 @@ fun MusicGPTApp() {
             )
         }
     }
+}
+
+fun Int.toRawUrl(context: Context): String? {
+    try {
+        val url = "android.resource://${context.packageName}/${this}"
+        return url
+    } catch (e: Exception) {
+        return null
+    }
+
 }
 
 @Composable

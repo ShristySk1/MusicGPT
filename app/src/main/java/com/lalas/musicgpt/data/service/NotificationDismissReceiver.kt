@@ -1,4 +1,4 @@
-package com.lalas.musicgpt.ui.service
+package com.lalas.musicgpt.data.service
 
 import android.content.BroadcastReceiver
 import android.content.Context
@@ -18,7 +18,6 @@ class NotificationDismissReceiver : BroadcastReceiver() {
             // Stop the music service
             val serviceIntent = Intent(context, MusicService::class.java)
             context.stopService(serviceIntent)
-
             // Also try to stop the media controller
             CoroutineScope(Dispatchers.Main).launch {
                 try {
@@ -28,7 +27,6 @@ class NotificationDismissReceiver : BroadcastReceiver() {
                     controller.stop()
                     controller.release()
                 } catch (e: Exception) {
-                    // Handle any errors gracefully
                 }
             }
         }

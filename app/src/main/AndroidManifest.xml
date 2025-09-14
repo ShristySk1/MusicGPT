@@ -29,7 +29,7 @@
             </intent-filter>
         </activity>
         <service
-        android:name=".ui.service.MusicService"
+        android:name=".data.service.MusicService"
         android:exported="true"
         android:foregroundServiceType="mediaPlayback">
         <intent-filter>
@@ -38,7 +38,7 @@
     </service>
         <!-- Add this inside <application> tag -->
         <receiver
-            android:name=".ui.service.NotificationDismissReceiver"
+            android:name=".data.service.NotificationDismissReceiver"
             android:exported="false">
             <intent-filter>
                 <action android:name="com.lalas.musicgpt.NOTIFICATION_DISMISSED" />

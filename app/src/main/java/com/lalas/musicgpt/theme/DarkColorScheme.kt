@@ -1,4 +1,4 @@
-package com.lalas.musicgpt.ui.theme
+package com.lalas.musicgpt.theme
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.darkColorScheme

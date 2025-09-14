@@ -9,15 +9,12 @@ data class GenerationTask(
     val progress: Int = 0, // 0-100
     val queueCount: Int? = null, // For queue simulation
     val colorStart: Color = Color(0xFFFF8504),
-    val colorEnd: Color = Color(0xFF990287)
+    val colorEnd: Color = Color(0xFF990287),
+    val audioUrl : Int? = null
 ) {
     val isCompleted: Boolean get() = progress == 100
     val isInProgress: Boolean get() = progress in 1..99
-    val isNotStarted: Boolean get() = progress == 0
-
-    // For backward compatibility
     val description: String get() = originalDescription
-    val audioUrl: String? = null
 
 }
 

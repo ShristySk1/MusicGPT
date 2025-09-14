@@ -42,16 +42,6 @@ fun FloatingPlayerBar(
         shadowElevation = 16.dp
     ) {
         Column {
-//            // Thin progress bar at the top
-//            LinearProgressIndicator(
-//                progress = { 0.3f }, // You can connect this to actual playback progress
-//                modifier = Modifier
-//                    .fillMaxWidth()
-//                    .height(2.dp),
-//                color = Color(0xFFFF7A00),
-//                trackColor = Color.Transparent
-//            )
-
             Row(
                 modifier = Modifier
                     .fillMaxSize()

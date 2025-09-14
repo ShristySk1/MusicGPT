@@ -1,21 +1,15 @@
-package com.lalas.musicgpt.ui.service
+package com.lalas.musicgpt.data.service
 
-import android.app.Notification
 import android.app.NotificationChannel
 import android.app.NotificationManager
-import android.content.pm.ServiceInfo
 import android.os.Build
 import androidx.annotation.OptIn
-import androidx.core.app.NotificationCompat
 import androidx.media3.common.Player
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.exoplayer.ExoPlayer
+import androidx.media3.session.DefaultMediaNotificationProvider
 import androidx.media3.session.MediaLibraryService
 import androidx.media3.session.MediaSession
-import androidx.media3.session.MediaLibraryService.MediaLibrarySession
-import androidx.media3.session.MediaNotification
-import androidx.media3.session.DefaultMediaNotificationProvider
-import com.lalas.musicgpt.R
 import dagger.hilt.android.AndroidEntryPoint
 
 @AndroidEntryPoint
@@ -26,7 +20,6 @@ class MusicService : MediaLibraryService() {
 
     companion object {
         private const val NOTIFICATION_CHANNEL_ID = "music_playback_channel"
-        private const val NOTIFICATION_ID = 1
     }
 
     @OptIn(UnstableApi::class)
