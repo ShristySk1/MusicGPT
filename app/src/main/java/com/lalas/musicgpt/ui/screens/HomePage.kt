@@ -1,4 +1,4 @@
-package com.lalas.musicgpt.data.ui.screens
+package com.lalas.musicgpt.ui.screens
 
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.foundation.background
@@ -10,6 +10,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material.ripple.rememberRipple
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -109,13 +110,14 @@ fun HomePage(
             )
         ) {
             items(tasks) { task ->
+                val isCurrentlyPlaying=currentPlayingTaskId == task.id && isPlayerVisible
                 TaskCard(
                     task = task,
-                    isCurrentlyPlaying = currentPlayingTaskId == task.id && isPlayerVisible,
+                    isCurrentlyPlaying = isCurrentlyPlaying,
                     onSkipClick = { onSkipClick(task) },
                     onClick = {
                         // Only allow click if task is completed (progress = 100)
-                        if (task.progress == 100) {
+                        if (task.progress == 100 && !isCurrentlyPlaying) {
                             onTaskClick(task)
                         }
                     }
@@ -134,20 +136,23 @@ fun TaskCard(
 ) {
     val isCompleted = task.progress == 100
     val isInProgress = task.progress in 1..99
+    val imageSize= remember { 68.dp }
 
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .height(60.dp)
+            .height(imageSize)
             .then(
-                if (isCompleted) {
+                if (task.progress == 100 && !isCurrentlyPlaying) {
                     Modifier.clickable { onClick() }
                 } else {
                     Modifier // No click modifier for incomplete tasks
                 }
             ),
         shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(containerColor = Color(0xFF000000))
+        colors = CardDefaults.cardColors(
+            containerColor = if (isCurrentlyPlaying) Color(0x8D2C2C2C) else Color(0xFF000000)
+        )
     ) {
         Box {
             // Show progress status overlay
@@ -168,12 +173,13 @@ fun TaskCard(
             }
 
             Row(
-                verticalAlignment = Alignment.CenterVertically
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier.padding(4.dp)
             ) {
                 // Progress indicator with percentage images or album cover
                 Box(
                     modifier = Modifier
-                        .size(60.dp),
+                        .size(imageSize),
                     contentAlignment = Alignment.Center
                 ) {
                     if (isCompleted) {
@@ -186,9 +192,7 @@ fun TaskCard(
                             model = randomAlbum,
                             contentDescription = "Album Cover",
                             modifier = Modifier
-                                .size(60.dp)
-                                .clip(RoundedCornerShape(8.dp)),
-                            contentScale = ContentScale.Crop,
+                                .size(imageSize),
                             error = painterResource(R.drawable.property_1_finish), // Fallback
                             placeholder = painterResource(R.drawable.property_1_finish)
                         )
@@ -208,7 +212,7 @@ fun TaskCard(
                             painter = painterResource(iconResource),
                             contentDescription = "${task.progress}%",
                             tint = Color.Unspecified,
-                            modifier = Modifier.size(60.dp)
+                            modifier = Modifier.size(imageSize)
                         )
                     }
 
@@ -218,7 +222,7 @@ fun TaskCard(
                             painter = painterResource(R.drawable.playing),
                             contentDescription = "Playing",
                             tint = Color.Unspecified,
-                            modifier = Modifier.size(60.dp)
+                            modifier = Modifier.size(imageSize)
                         )
                     }
                 }

@@ -101,7 +101,8 @@ class MusicGPTViewModel : ViewModel() {
             _uiState.value = _uiState.value.copy(
                 currentTrack = task,
                 isPlayerVisible = true,
-                isPlaying = true
+                isPlaying = true,
+                isLoading = true,  // Set loading to true
             )
             // Start actual music playback here
         }
@@ -111,6 +112,7 @@ class MusicGPTViewModel : ViewModel() {
         _uiState.value = _uiState.value.copy(
             isPlayerVisible = false,
             isPlaying = false,
+            isLoading = false,  // Set loading to true
             currentTrack = null
         )
         // Stop music playback here
@@ -123,37 +125,63 @@ class MusicGPTViewModel : ViewModel() {
         )
         // Toggle actual music playback here
     }
+    fun setLoadingState(isLoading: Boolean) {
+        _uiState.value = _uiState.value.copy(
+            isLoading = isLoading
+        )
+    }
 
     fun nextTrack() {
-        // Find next completed track in tasks list and play it
-        val completedTasks = _uiState.value.tasks.filter { it.progress == 100 }
-        val currentIndex = completedTasks.indexOfFirst {
-            it.id == _uiState.value.currentTrack?.id
-        }
+        val currentTrackId = _uiState.value.currentTrack?.id
+        val allTasks = _uiState.value.tasks.filter { it.progress == 100 }
 
-        if (currentIndex != -1 && currentIndex < completedTasks.size - 1) {
-            val nextTask = completedTasks[currentIndex + 1]
-            playTrack(nextTask)
-        } else if (completedTasks.isNotEmpty()) {
-            // Loop back to first track if at end
-            playTrack(completedTasks[0])
+        if (allTasks.isNotEmpty()) {
+            val currentIndex = allTasks.indexOfFirst { it.id == currentTrackId }
+            val nextIndex = if (currentIndex < allTasks.size - 1) currentIndex + 1 else 0
+            val nextTask = allTasks[nextIndex]
+
+            // Immediately update UI state - this cancels any current loading
+            _uiState.value = _uiState.value.copy(
+                currentTrack = nextTask,
+                isPlaying = false,
+                isLoading = true, // Show loading for new track
+                isPlayerVisible = true
+            )
         }
     }
 
     fun previousTrack() {
-        // Find previous completed track in tasks list and play it
-        val completedTasks = _uiState.value.tasks.filter { it.progress == 100 }
-        val currentIndex = completedTasks.indexOfFirst {
-            it.id == _uiState.value.currentTrack?.id
-        }
+        val currentTrackId = _uiState.value.currentTrack?.id
+        val allTasks = _uiState.value.tasks.filter { it.progress == 100 }
 
-        if (currentIndex > 0) {
-            val previousTask = completedTasks[currentIndex - 1]
-            playTrack(previousTask)
-        } else if (completedTasks.isNotEmpty()) {
-            // Loop to last track if at beginning
-            playTrack(completedTasks.last())
+        if (allTasks.isNotEmpty()) {
+            val currentIndex = allTasks.indexOfFirst { it.id == currentTrackId }
+            val previousIndex = if (currentIndex > 0) currentIndex - 1 else allTasks.size - 1
+            val previousTask = allTasks[previousIndex]
+
+            // Immediately update UI state - this cancels any current loading
+            _uiState.value = _uiState.value.copy(
+                currentTrack = previousTask,
+                isPlaying = false,
+                isLoading = true, // Show loading for new track
+                isPlayerVisible = true
+            )
         }
+    }
+    fun updatePlayingState(isPlaying: Boolean) {
+        _uiState.value = _uiState.value.copy(
+            isPlaying = isPlaying,
+            isLoading = false // Clear loading when we get play state
+        )
+    }
+
+    fun resetPlayerState() {
+        _uiState.value = _uiState.value.copy(
+            isPlaying = false,
+            isPlayerVisible = false,
+            currentTrack = null,
+            isLoading = false, // Clear loading on reset
+        )
     }
 
     // Add method to create new task with proper title and description

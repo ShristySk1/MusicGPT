@@ -1,4 +1,4 @@
-package com.lalas.musicgpt.data.ui.components
+package com.lalas.musicgpt.ui.components
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -23,6 +23,7 @@ import com.lalas.musicgpt.data.GenerationTask
 fun FloatingPlayerBar(
     currentTrack: GenerationTask?,
     isPlaying: Boolean,
+    isLoading: Boolean,
     onPlayPause: () -> Unit,
     onNext: () -> Unit,
     onPrevious: () -> Unit,
@@ -119,7 +120,7 @@ fun FloatingPlayerBar(
 
                 // Control Buttons
                 Row(
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    horizontalArrangement = Arrangement.spacedBy(6.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     // Previous Button
@@ -131,20 +132,38 @@ fun FloatingPlayerBar(
                             painter = painterResource(R.drawable.ic_previous),
                             contentDescription = "Previous",
                             tint = Color.White,
-                            modifier = Modifier.size(28.dp)
                         )
                     }
                     IconButton(
-                        onClick = onPlayPause,
-                        modifier = Modifier.size(40.dp)
+                        onClick = if (!isLoading) onPlayPause else { {} }, // Disable when loading
+                        modifier = Modifier.size(48.dp)
                     ) {
-                        Icon(
-                                if (isPlaying) painterResource(R.drawable.ic_pause) else painterResource(
-                                    R.drawable.ic_next
-                                ),                                contentDescription = if (isPlaying) "Pause" else "Play",
-                                tint = Color.White,
-                                modifier = Modifier.size(28.dp)
-                            )
+                        when {
+                            isLoading -> {
+                                // Show circular progress indicator
+                                CircularProgressIndicator(
+                                    modifier = Modifier.size(24.dp),
+                                    color = Color.White,
+                                    strokeWidth = 2.dp
+                                )
+                            }
+                            isPlaying -> {
+                                Icon(
+                                    painter = painterResource(R.drawable.ic_pause),
+                                    contentDescription = "Pause",
+                                    tint = Color.White,
+                                    modifier = Modifier.size(24.dp)
+                                )
+                            }
+                            else -> {
+                                Icon(
+                                    painter = painterResource(R.drawable.ic_play),
+                                    contentDescription = "Play",
+                                    tint = Color.White,
+                                    modifier = Modifier.size(24.dp)
+                                )
+                            }
+                        }
                     }
 
                     // Next Button

@@ -2,6 +2,8 @@ plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
+    alias(libs.plugins.kotlin.hilt)
+    kotlin("kapt")
 }
 
 android {
@@ -58,4 +60,15 @@ dependencies {
     debugImplementation(libs.androidx.ui.test.manifest)
     // Coil for AsyncImage
     implementation("io.coil-kt:coil-compose:2.4.0")
+    // Media3 ExoPlayer
+    implementation("androidx.media3:media3-exoplayer:1.4.1")
+    implementation("androidx.media3:media3-ui:1.4.1")
+// MediaSession
+    implementation("androidx.media3:media3-session:1.4.1")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-guava:1.9.0")
+    implementation(libs.android.hilt)
+    kapt(libs.android.hilt.compiler)
+    implementation(libs.android.hilt.navigation.compose)
+
+
 }

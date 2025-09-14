@@ -1,4 +1,4 @@
-package com.lalas.musicgpt.data.ui.components
+package com.lalas.musicgpt.ui.components
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*

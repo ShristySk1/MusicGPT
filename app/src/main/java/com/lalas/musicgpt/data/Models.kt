@@ -17,6 +17,8 @@ data class GenerationTask(
 
     // For backward compatibility
     val description: String get() = originalDescription
+    val audioUrl: String? = null
+
 }
 
 data class MusicGPTUiState(
@@ -26,7 +28,9 @@ data class MusicGPTUiState(
     val generationProgress: Int = 0,
     val currentTrack: GenerationTask? = null,
     val isPlayerVisible: Boolean = false,
-    val isPlaying: Boolean = false
+    val isPlaying: Boolean = false,
+    val isLoading: Boolean = false,
+
 ) {
     val completedTasks: List<GenerationTask> get() = tasks.filter { it.isCompleted }
     val inProgressTasks: List<GenerationTask> get() = tasks.filter { it.isInProgress }

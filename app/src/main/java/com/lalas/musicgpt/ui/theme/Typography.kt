@@ -1,4 +1,4 @@
-package com.lalas.musicgpt.data.ui.theme
+package com.lalas.musicgpt.ui.theme
 
 import androidx.compose.material3.Typography
 import androidx.compose.ui.text.TextStyle

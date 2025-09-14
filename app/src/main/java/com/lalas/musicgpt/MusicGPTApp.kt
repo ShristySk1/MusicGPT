@@ -1,73 +1,80 @@
 package com.lalas.musicgpt
 
-import androidx.compose.animation.*
-import androidx.compose.animation.core.*
+import android.content.ComponentName
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.FastOutLinearInEasing
+import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.*
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
-import androidx.compose.ui.draw.drawBehind
-import androidx.compose.ui.platform.LocalDensity
-import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.unit.IntOffset
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
-import com.lalas.musicgpt.data.MusicGPTViewModel
-import com.lalas.musicgpt.data.ui.components.FloatingPlayerBar
-import com.lalas.musicgpt.data.ui.components.GenerationScreen
-import com.lalas.musicgpt.data.ui.screens.HomePage
-import com.lalas.musicgpt.data.ui.screens.CreateSongInputEnhanced
-import androidx.compose.animation.AnimatedContent
-import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.ime
+import androidx.compose.foundation.layout.imeNestedScroll
+import androidx.compose.foundation.layout.imePadding
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material3.*
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.NavigationBar
+import androidx.compose.material3.NavigationBarItem
+import androidx.compose.material3.NavigationBarItemDefaults
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.graphics.BlendMode
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.graphics.drawscope.Stroke
-import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.TextStyle
-import androidx.compose.ui.text.buildAnnotatedString
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
-import androidx.compose.ui.text.style.TextDecoration
-import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import coil.compose.AsyncImage
-import com.lalas.musicgpt.R
-import com.lalas.musicgpt.data.GenerationTask
-import kotlinx.coroutines.delay
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.ui.draw.shadow
-import androidx.compose.ui.graphics.SolidColor
-import androidx.compose.ui.text.style.TextAlign
-import kotlinx.coroutines.launch
-import java.util.UUID
-import kotlin.random.Random
+import androidx.media3.common.MediaItem
+import androidx.media3.common.MediaMetadata
+import androidx.media3.common.PlaybackException
+import androidx.media3.common.Player
+import androidx.media3.session.MediaController
+import androidx.media3.session.SessionToken
+import com.lalas.musicgpt.data.MusicGPTViewModel
+import com.lalas.musicgpt.ui.components.FloatingPlayerBar
+import com.lalas.musicgpt.ui.components.GenerationScreen
+import com.lalas.musicgpt.ui.screens.CreateSongInputEnhanced
+import com.lalas.musicgpt.ui.screens.HomePage
+import com.lalas.musicgpt.ui.service.MusicService
+import kotlinx.coroutines.guava.await
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
@@ -110,6 +117,126 @@ fun MusicGPTApp() {
     val gradientBrush = Brush.linearGradient(
         colors = gradientColors
     )
+    //music player
+    var controller by remember { mutableStateOf<MediaController?>(null) }
+    val context = LocalContext.current
+    // In the LaunchedEffect block in MusicGPTApp
+    LaunchedEffect(Unit) {
+        val sessionToken = SessionToken(context, ComponentName(context, MusicService::class.java))
+        val controllerFuture = MediaController.Builder(context, sessionToken).buildAsync()
+        controller = controllerFuture.await()
+
+        controller?.addListener(object : Player.Listener {
+            override fun onPlaybackStateChanged(playbackState: Int) {
+                // Get current media ID to ensure we're handling the right track
+                val currentMediaId = controller?.currentMediaItem?.mediaId
+                val expectedTrackId = uiState.currentTrack?.id
+
+                // Only update state if this event is for the currently expected track
+                if (currentMediaId == expectedTrackId) {
+                    when (playbackState) {
+                        Player.STATE_IDLE -> {
+                            if (!uiState.isLoading) {
+                                viewModel.resetPlayerState()
+                            }
+                        }
+                        Player.STATE_ENDED -> {
+                            viewModel.nextTrack()
+                        }
+                        Player.STATE_BUFFERING -> {
+                            viewModel.setLoadingState(true)
+                        }
+                        Player.STATE_READY -> {
+                            viewModel.setLoadingState(false)
+                            // Auto-play when ready
+                            if (uiState.currentTrack != null) {
+                                viewModel.updatePlayingState(true)
+                                controller?.play()
+                            }
+                        }
+                    }
+                }
+            }
+
+            override fun onIsPlayingChanged(isPlaying: Boolean) {
+                val currentMediaId = controller?.currentMediaItem?.mediaId
+                val expectedTrackId = uiState.currentTrack?.id
+
+                // Only update if this is for the current track and not loading
+                if (currentMediaId == expectedTrackId && !uiState.isLoading) {
+                    viewModel.updatePlayingState(isPlaying)
+                }
+            }
+
+            override fun onPlayerError(error: PlaybackException) {
+                viewModel.resetPlayerState()
+            }
+        })
+    }
+    LaunchedEffect(uiState.currentTrack) {
+        uiState.currentTrack?.let { track ->
+            controller?.let { mediaController ->
+                try {
+                    // Create media item for the requested track
+                    val mediaItem = MediaItem.Builder()
+                        .setUri(track.audioUrl ?: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3")
+                        .setMediaId(track.id)
+                        .setMediaMetadata(
+                            MediaMetadata.Builder()
+                                .setTitle(track.description)
+                                .setArtist("AI Generated")
+                                .build()
+                        )
+                        .build()
+
+                    // Stop current playback immediately
+                    mediaController.stop()
+                    mediaController.clearMediaItems()
+
+                    // Set new media item
+                    mediaController.setMediaItem(mediaItem)
+                    mediaController.prepare()
+
+                    // The player listener will handle the loading states
+
+                } catch (e: Exception) {
+                    println("Error setting up media: ${e.message}")
+                    viewModel.resetPlayerState()
+                }
+            }
+        }
+    }
+
+// Add a separate LaunchedEffect for play/pause control
+    LaunchedEffect(uiState.isPlaying) {
+        controller?.let { mediaController ->
+            try {
+                if (uiState.isPlaying) {
+                    mediaController.play()
+                } else {
+                    mediaController.pause()
+                }
+            } catch (e: Exception) {
+                // Handle playback control errors
+                println("Error controlling playback: ${e.message}")
+            }
+        }
+    }
+
+// Optional: Add listener for MediaController state changes to keep ViewModel in sync
+    LaunchedEffect(controller) {
+        controller?.let { mediaController ->
+            // You might want to add a listener here to sync the actual player state
+            // back to your ViewModel when the user interacts with the notification
+            // This would require implementing a Player.Listener
+        }
+    }
+
+    DisposableEffect(Unit) {
+        onDispose {
+            controller?.release()
+        }
+    }
 
     Box(
         modifier = Modifier
@@ -211,7 +338,7 @@ fun MusicGPTApp() {
             )
         }
 
-        if(showCreateInput){
+        if (showCreateInput) {
             // Full-width black background container
             Box(
                 modifier = Modifier
@@ -219,7 +346,8 @@ fun MusicGPTApp() {
                     .imePadding()
                     .align(Alignment.BottomCenter)
                     .imeNestedScroll()
-                    .background(Color.Black).padding(top = 16.dp, bottom = 16.dp), // full-width black
+                    .background(Color.Black)
+                    .padding(top = 16.dp, bottom = 16.dp), // full-width black
                 contentAlignment = Alignment.BottomCenter
             ) {
                 // Glow box inside full-width black container
@@ -279,8 +407,7 @@ fun MusicGPTApp() {
                     ) {
                         IconButton(
                             onClick = {
-                                showCreateInput = false
-                                inputText = ""
+
                             }
                         ) {
                             Icon(
@@ -385,6 +512,7 @@ fun MusicGPTApp() {
             FloatingPlayerBar(
                 currentTrack = uiState.currentTrack,
                 isPlaying = uiState.isPlaying,
+                isLoading = uiState.isLoading, // ADD THIS
                 onPlayPause = { viewModel.togglePlayPause() },
                 onNext = { viewModel.nextTrack() },
                 onPrevious = { viewModel.previousTrack() },
