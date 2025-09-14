@@ -1,4 +1,4 @@
-package com.lalas.musicgpt.data
+package com.lalas.musicgpt.data.model
 
 import androidx.compose.ui.graphics.Color
 
@@ -10,7 +10,8 @@ data class GenerationTask(
     val queueCount: Int? = null, // For queue simulation
     val colorStart: Color = Color(0xFFFF8504),
     val colorEnd: Color = Color(0xFF990287),
-    val audioUrl : Int? = null
+    val audioUrl : Int? = null,
+    val image :Int
 ) {
     val isCompleted: Boolean get() = progress == 100
     val isInProgress: Boolean get() = progress in 1..99
@@ -28,7 +29,7 @@ data class MusicGPTUiState(
     val isPlaying: Boolean = false,
     val isLoading: Boolean = false,
 
-) {
+    ) {
     val completedTasks: List<GenerationTask> get() = tasks.filter { it.isCompleted }
     val inProgressTasks: List<GenerationTask> get() = tasks.filter { it.isInProgress }
 }

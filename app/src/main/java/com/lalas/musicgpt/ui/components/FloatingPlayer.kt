@@ -17,7 +17,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.lalas.musicgpt.R
-import com.lalas.musicgpt.data.GenerationTask
+import com.lalas.musicgpt.data.model.GenerationTask
 
 @Composable
 fun FloatingPlayerBar(

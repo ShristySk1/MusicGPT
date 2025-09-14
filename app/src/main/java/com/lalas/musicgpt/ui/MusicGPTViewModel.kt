@@ -4,8 +4,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.lalas.musicgpt.R
-import com.lalas.musicgpt.data.GenerationTask
-import com.lalas.musicgpt.data.MusicGPTUiState
+import com.lalas.musicgpt.data.model.GenerationTask
+import com.lalas.musicgpt.data.model.MusicGPTUiState
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -31,7 +31,8 @@ class MusicGPTViewModel : ViewModel() {
                 progress = 100,
                 colorStart = Color(0xFFE91E63),
                 colorEnd = Color(0xFF9C27B0),
-                audioUrl =  R.raw.sample1
+                audioUrl =  R.raw.sample1,
+                image = R.drawable.random_1
 
             ),
             GenerationTask(
@@ -41,7 +42,8 @@ class MusicGPTViewModel : ViewModel() {
                 progress = 100,
                 colorStart = Color(0xFFE91E63),
                 colorEnd = Color(0xFF9C27B0),
-                audioUrl =R.raw.sample2
+                audioUrl =R.raw.sample2,
+                image = R.drawable.random_2
             ),
             GenerationTask(
                 id = "3",
@@ -50,7 +52,8 @@ class MusicGPTViewModel : ViewModel() {
                 progress = 100,
                 colorStart = Color(0xFF607D8B),
                 colorEnd = Color(0xFF455A64),
-                audioUrl = R.raw.sample1
+                audioUrl = R.raw.sample1,
+                image = R.drawable.random_3
             ),
             GenerationTask(
                 id = "4",
@@ -59,7 +62,8 @@ class MusicGPTViewModel : ViewModel() {
                 progress = 100,
                 colorStart = Color(0xFF795548),
                 colorEnd = Color(0xFF5D4037),
-                audioUrl = R.raw.sample2
+                audioUrl = R.raw.sample2,
+                image = R.drawable.random_1
             ),
             GenerationTask(
                 id = "5",
@@ -68,7 +72,8 @@ class MusicGPTViewModel : ViewModel() {
                 progress = 100,
                 colorStart = Color(0xFF2196F3),
                 colorEnd = Color(0xFF1976D2),
-                audioUrl=R.raw.sample1
+                audioUrl=R.raw.sample1,
+                image = R.drawable.random_2
             ),
         )
 
@@ -208,7 +213,8 @@ class MusicGPTViewModel : ViewModel() {
             queueCount = Random.nextInt(15000, 25000), // Random initial queue count
             colorStart = Color(0xFFFF8504),
             colorEnd = Color(0xFF990287),
-            audioUrl = R.raw.sample3
+            audioUrl = R.raw.sample3,
+            image = R.drawable.property_1_finish
         )
 
         val currentTasks = _uiState.value.tasks.toMutableList()

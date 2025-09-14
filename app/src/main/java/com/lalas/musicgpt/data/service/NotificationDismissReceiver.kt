@@ -6,7 +6,7 @@ import android.content.Intent
 import android.content.ComponentName
 import androidx.media3.session.MediaController
 import androidx.media3.session.SessionToken
-import com.lalas.musicgpt.data.MusicConstants
+import com.lalas.musicgpt.data.constants.MusicConstants
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch

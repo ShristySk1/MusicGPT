@@ -44,7 +44,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import com.lalas.musicgpt.R
-import com.lalas.musicgpt.data.GenerationTask
+import com.lalas.musicgpt.data.model.GenerationTask
 import kotlin.random.Random
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -179,13 +179,8 @@ fun TaskCard(
                     contentAlignment = Alignment.Center
                 ) {
                     if (isCompleted) {
-                        // Show random album cover for completed tasks
-                        val randomAlbum = remember(task.id) {
-                            listOf(R.drawable.random_1, R.drawable.random_2, R.drawable.random_3).random()
-                        }
-
                         AsyncImage(
-                            model = randomAlbum,
+                            model = task.image,
                             contentDescription = "Album Cover",
                             modifier = Modifier
                                 .size(imageSize),
