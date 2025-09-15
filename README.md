@@ -62,7 +62,6 @@ app/src/main/java/com/lalas/musicgpt/
 2. **MusicService**: Handles background audio playback with Media3
 3. **FloatingPlayer**: Persistent mini-player component
 4. **TaskCard**: Displays generation tasks with progress indicators
-5. **Custom Theme System**: Dark/light mode support with Material 3
 
 ## 🚀 Getting Started
 
