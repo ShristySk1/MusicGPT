@@ -1,7 +1,6 @@
 package com.lalas.musicgpt
 
 import android.content.ComponentName
-import android.content.Context
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.FastOutLinearInEasing
 import androidx.compose.animation.core.FastOutSlowInEasing
@@ -31,11 +30,9 @@ import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.NavigationBar
-import androidx.compose.material3.NavigationBarItem
-import androidx.compose.material3.NavigationBarItemDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -61,6 +58,8 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.media3.common.MediaItem
@@ -69,11 +68,15 @@ import androidx.media3.common.PlaybackException
 import androidx.media3.common.Player
 import androidx.media3.session.MediaController
 import androidx.media3.session.SessionToken
-import com.lalas.musicgpt.ui.MusicGPTViewModel
-import com.lalas.musicgpt.ui.components.FloatingPlayerBar
-import com.lalas.musicgpt.ui.screens.CreateSongInputEnhanced
-import com.lalas.musicgpt.ui.screens.HomePage
-import com.lalas.musicgpt.data.service.MusicService
+import com.lalas.musicgpt.data.model.GenerationTask
+import com.lalas.musicgpt.presentation.components.BottomNavigationBar
+import com.lalas.musicgpt.presentation.components.CreateButton
+import com.lalas.musicgpt.presentation.components.FloatingPlayerBar
+import com.lalas.musicgpt.presentation.screens.EmptyScreen
+import com.lalas.musicgpt.presentation.screens.HomePage
+import com.lalas.musicgpt.presentation.viewmodels.MusicGPTViewModel
+import com.lalas.musicgpt.service.MusicService
+import com.lalas.musicgpt.utils.toRawUrl
 import kotlinx.coroutines.guava.await
 
 @OptIn(ExperimentalLayoutApi::class)
@@ -96,7 +99,6 @@ fun MusicGPTApp() {
     // Handle keyboard visibility changes
     LaunchedEffect(isKeyboardVisible) {
         if (!isKeyboardVisible && showCreateInput) {
-            // Keyboard was hidden, hide the input and show create button
             showCreateInput = false
             inputText = ""
         }
@@ -202,8 +204,6 @@ fun MusicGPTApp() {
                     mediaController.setMediaItem(mediaItem)
                     mediaController.prepare()
 
-                    // The player listener will handle the loading states
-
                 } catch (e: Exception) {
                     println("Error setting up media: ${e.message}")
                     viewModel.resetPlayerState()
@@ -242,7 +242,6 @@ fun MusicGPTApp() {
 
     ) {
         Column(modifier = Modifier.fillMaxSize()) {
-            // Main content - apply keyboard insets only to scrollable content
             Box(
                 modifier = Modifier
                     .weight(1f)
@@ -315,31 +314,30 @@ fun MusicGPTApp() {
                 .padding(
                     bottom = when {
                         // Both player and bottom nav visible
-                        uiState.isPlayerVisible -> 190.dp // Player (80dp) + bottom nav (80dp)
+                        uiState.isPlayerVisible -> 190.dp // Player  + bottom nav
                         // Only bottom nav visible
-                        else -> 96.dp // Bottom nav (80dp) + spacing (16dp)
+                        else -> 96.dp // Bottom nav + spacing
                     }
                 )
 
         ) {
-            CreateSongInputEnhanced(
+            CreateButton(
                 onShowInputChange = { showCreateInput = it },
             )
         }
 
         if (showCreateInput) {
-            // Full-width black background container
             Box(
                 modifier = Modifier
-                    .fillMaxWidth() // full screen width
+                    .fillMaxWidth()
                     .imePadding()
                     .align(Alignment.BottomCenter)
                     .imeNestedScroll()
                     .background(Color.Black)
-                    .padding(top = 16.dp, bottom = 16.dp), // full-width black
+                    .padding(top = 16.dp, bottom = 16.dp),
                 contentAlignment = Alignment.BottomCenter
             ) {
-                // Glow box inside full-width black container
+                // Glow box
                 Box(
                     modifier = Modifier
                         .fillMaxWidth(0.9f) // glow box width
@@ -468,7 +466,6 @@ fun MusicGPTApp() {
         }
 
         // Floating Player with smooth animations - positioned above bottom nav
-        // Hide when keyboard is visible on home screen
         AnimatedVisibility(
             visible = uiState.isPlayerVisible && !(uiState.currentScreen == "home" && isKeyboardVisible),
             enter = slideInVertically(
@@ -486,11 +483,14 @@ fun MusicGPTApp() {
             exit = slideOutVertically(
                 targetOffsetY = { fullHeight -> fullHeight },
                 animationSpec = tween(
-                    durationMillis = 300,
-                    easing = FastOutLinearInEasing
+                    durationMillis = 400,
+                    easing = FastOutSlowInEasing
                 )
             ) + fadeOut(
-                animationSpec = tween(durationMillis = 200)
+                animationSpec = tween(
+                    durationMillis = 300,
+                    delayMillis = 50
+                ) // Small delay to see slide before fade)
             ),
             modifier = Modifier
                 .align(Alignment.BottomCenter)
@@ -505,135 +505,65 @@ fun MusicGPTApp() {
                 onPlayPause = { viewModel.togglePlayPause() },
                 onNext = { viewModel.nextTrack() },
                 onPrevious = { viewModel.previousTrack() },
-                onClose = { viewModel.hidePlayer() }
+                onClose = {  // don't clear currentTrack immediately so using setPlayerVisible
+                    viewModel.setPlayerVisible(false)
+                }
             )
         }
     }
 }
 
-fun Int.toRawUrl(context: Context): String? {
-    try {
-        val url = "android.resource://${context.packageName}/${this}"
-        return url
-    } catch (e: Exception) {
-        return null
-    }
-
-}
-
+@Preview(showBackground = true, heightDp = 300, widthDp = 150)
 @Composable
-fun BottomNavigationBar(
-    selectedTab: Int,
-    onTabSelected: (Int) -> Unit,
-    isPlayerVisible: Boolean
-) {
-    NavigationBar(
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(80.dp), // Fixed height for consistent spacing
-        containerColor = Color(0xff0A0C0D),
-        contentColor = Color.White,
+fun MusicGPTAppPreview() {
+    val sampleTasks = listOf(
+        GenerationTask(
+            id = "1",
+            title = "Midnight Dreams",
+            originalDescription = "Ambient electronic music",
+            progress = 100,
+            image = R.drawable.property_1_finish,
+        ),
+        GenerationTask(
+            id = "2",
+            title = "Ocean Waves",
+            originalDescription = "Nature sounds",
+            progress = 100,
+            image = R.drawable.property_1_finish,
+        )
+    )
+
+    // Mock the remember and state management for preview
+    CompositionLocalProvider(
+        LocalDensity provides Density(1f)
     ) {
-        NavigationBarItem(
-            icon = {
-                Icon(
-                    painter = painterResource(id = R.drawable.ic_ai),
-                    contentDescription = "AI"
-                )
-            },
-            label = null,
-            selected = selectedTab == 0,
-            onClick = { onTabSelected(0) },
-            colors = NavigationBarItemDefaults.colors(
-                selectedIconColor = Color.White,
-                unselectedIconColor = Color(0xff6B7280),
-                indicatorColor = Color.Transparent
-            )
-        )
-
-        NavigationBarItem(
-            icon = {
-                Icon(
-                    painter = painterResource(id = R.drawable.ic_discover),
-                    contentDescription = "Discover"
-                )
-            },
-            label = null,
-            selected = selectedTab == 1,
-            onClick = { onTabSelected(1) },
-            colors = NavigationBarItemDefaults.colors(
-                selectedIconColor = Color.White,
-                unselectedIconColor = Color(0xff6B7280),
-                indicatorColor = Color.Transparent
-            )
-        )
-
-        NavigationBarItem(
-            icon = {
-                Icon(
-                    painter = painterResource(id = R.drawable.ic_reel),
-                    contentDescription = "Reels"
-                )
-            },
-            label = null,
-            selected = selectedTab == 2,
-            onClick = { onTabSelected(2) },
-            colors = NavigationBarItemDefaults.colors(
-                selectedIconColor = Color.White,
-                unselectedIconColor = Color(0xff6B7280),
-                indicatorColor = Color.Transparent
-            )
-        )
-
-        NavigationBarItem(
-            icon = {
-                Icon(
-                    painter = painterResource(id = R.drawable.ic_user),
-                    contentDescription = "Profile"
-                )
-            },
-            label = null,
-            selected = selectedTab == 3,
-            onClick = { onTabSelected(3) },
-            colors = NavigationBarItemDefaults.colors(
-                selectedIconColor = Color.White,
-                unselectedIconColor = Color(0xff6B7280),
-                indicatorColor = Color.Transparent
-            )
-        )
-    }
-}
-
-@Composable
-fun EmptyScreen(title: String, emoji: String) {
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(Color(0xff0A0C0D))
-            .padding(bottom = 80.dp), // Add padding for bottom nav
-        contentAlignment = Alignment.Center
-    ) {
-        Column(
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(Color(0xff0A0C0D))
         ) {
-            Text(
-                text = emoji,
-                fontSize = 48.sp
-            )
-            Spacer(modifier = Modifier.height(16.dp))
-            Text(
-                text = "$title Coming Soon",
-                color = Color.White,
-                fontSize = 20.sp,
-                fontWeight = FontWeight.Medium
-            )
-            Spacer(modifier = Modifier.height(8.dp))
-            Text(
-                text = "This feature is under development",
-                color = Color(0xff6B7280),
-                fontSize = 14.sp
-            )
+            Column(modifier = Modifier.fillMaxSize()) {
+                Box(
+                    modifier = Modifier
+                        .weight(1f)
+                        .fillMaxWidth()
+                ) {
+                    HomePage(
+                        tasks = sampleTasks,
+                        onTaskClick = { /* Preview */ },
+                        onSkipClick = { /* Preview */ },
+                        isPlayerVisible = false,
+                        currentPlayingTaskId = null,
+                        showCreateButton = false
+                    )
+                }
+
+                BottomNavigationBar(
+                    selectedTab = 0,
+                    onTabSelected = { /* Preview */ },
+                    isPlayerVisible = false
+                )
+            }
         }
     }
 }

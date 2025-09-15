@@ -1,4 +1,4 @@
-package com.lalas.musicgpt.data.service
+package com.lalas.musicgpt.service
 
 import android.app.NotificationChannel
 import android.app.NotificationManager
@@ -10,6 +10,7 @@ import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.session.DefaultMediaNotificationProvider
 import androidx.media3.session.MediaLibraryService
 import androidx.media3.session.MediaSession
+import com.lalas.musicgpt.data.constants.MusicConstants.NOTIFICATION_CHANNEL_ID
 import dagger.hilt.android.AndroidEntryPoint
 
 @AndroidEntryPoint
@@ -17,10 +18,6 @@ class MusicService : MediaLibraryService() {
 
     private var player: ExoPlayer? = null
     private var mediaLibrarySession: MediaLibrarySession? = null
-
-    companion object {
-        private const val NOTIFICATION_CHANNEL_ID = "music_playback_channel"
-    }
 
     @OptIn(UnstableApi::class)
     override fun onCreate() {

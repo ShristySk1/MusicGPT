@@ -58,14 +58,14 @@ dependencies {
     androidTestImplementation(libs.androidx.ui.test.junit4)
     debugImplementation(libs.androidx.ui.tooling)
     debugImplementation(libs.androidx.ui.test.manifest)
-    // Coil for AsyncImage
-    implementation("io.coil-kt:coil-compose:2.4.0")
-    // Media3 ExoPlayer
-    implementation("androidx.media3:media3-exoplayer:1.4.1")
-    implementation("androidx.media3:media3-ui:1.4.1")
-// MediaSession
-    implementation("androidx.media3:media3-session:1.4.1")
-    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-guava:1.9.0")
+    //image
+    implementation(libs.coil.compose)
+    //exoplayer
+    implementation(libs.media.exoplayer)
+    implementation(libs.media.ui)
+    //media session
+    implementation(libs.media.session)
+    implementation(libs.coroutines.guava)
     implementation(libs.android.hilt)
     kapt(libs.android.hilt.compiler)
     implementation(libs.android.hilt.navigation.compose)

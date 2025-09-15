@@ -1,4 +1,4 @@
-package com.lalas.musicgpt.data.service
+package com.lalas.musicgpt.service
 
 import android.content.BroadcastReceiver
 import android.content.Context

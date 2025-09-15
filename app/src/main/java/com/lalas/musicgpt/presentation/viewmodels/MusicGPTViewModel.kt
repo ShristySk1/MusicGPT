@@ -1,4 +1,4 @@
-package com.lalas.musicgpt.ui
+package com.lalas.musicgpt.presentation.viewmodels
 
 import androidx.compose.ui.graphics.Color
 import androidx.lifecycle.ViewModel
@@ -84,33 +84,6 @@ class MusicGPTViewModel : ViewModel() {
         )
     }
 
-    fun startGeneration(task: GenerationTask) {
-        _uiState.value = _uiState.value.copy(
-            currentScreen = "generation",
-            currentTask = task,
-            generationProgress = 0
-        )
-
-        viewModelScope.launch {
-            for (i in 0..100 step 25) {
-                delay(1000)
-                _uiState.value = _uiState.value.copy(generationProgress = i)
-            }
-        }
-    }
-
-    fun goHome() {
-        _uiState.value = _uiState.value.copy(
-            currentScreen = "home",
-            currentTask = null,
-            generationProgress = 0
-        )
-    }
-
-    fun showCreateDialog() {
-        // Implementation for showing create dialog
-    }
-
     fun playTrack(task: GenerationTask) {
         // Only allow playing completed tracks
         if (task.progress == 100) {
@@ -120,10 +93,12 @@ class MusicGPTViewModel : ViewModel() {
                 isPlaying = true,
                 isLoading = true,  // Set loading to true
             )
-            // Start actual music playback here
         }
     }
 
+    /**
+     * Directly hide player without animation
+     */
     fun hidePlayer() {
         _uiState.value = _uiState.value.copy(
             isPlayerVisible = false,
@@ -131,7 +106,20 @@ class MusicGPTViewModel : ViewModel() {
             isLoading = false,  // Set loading to true
             currentTrack = null
         )
-        // Stop music playback here
+    }
+
+    /**
+     * Need to hide player with animation
+     */
+    fun setPlayerVisible(visible: Boolean) {
+        _uiState.value = _uiState.value.copy(isPlayerVisible = visible)
+        // Clear the track after animation completes (400ms + buffer)
+        if (!visible) {
+            viewModelScope.launch {
+                delay(500) // Wait for animation to complete
+                hidePlayer()
+            }
+        }
     }
 
     fun togglePlayPause() {
@@ -139,7 +127,6 @@ class MusicGPTViewModel : ViewModel() {
         _uiState.value = currentState.copy(
             isPlaying = !currentState.isPlaying
         )
-        // Toggle actual music playback here
     }
     fun setLoadingState(isLoading: Boolean) {
         _uiState.value = _uiState.value.copy(
@@ -160,7 +147,7 @@ class MusicGPTViewModel : ViewModel() {
             _uiState.value = _uiState.value.copy(
                 currentTrack = nextTask,
                 isPlaying = false,
-                isLoading = true, // Show loading for new track
+                isLoading = true,
                 isPlayerVisible = true
             )
         }
@@ -179,7 +166,7 @@ class MusicGPTViewModel : ViewModel() {
             _uiState.value = _uiState.value.copy(
                 currentTrack = previousTask,
                 isPlaying = false,
-                isLoading = true, // Show loading for new track
+                isLoading = true,
                 isPlayerVisible = true
             )
         }
@@ -187,7 +174,7 @@ class MusicGPTViewModel : ViewModel() {
     fun updatePlayingState(isPlaying: Boolean) {
         _uiState.value = _uiState.value.copy(
             isPlaying = isPlaying,
-            isLoading = false // Clear loading when we get play state
+            isLoading = false
         )
     }
 
@@ -196,11 +183,11 @@ class MusicGPTViewModel : ViewModel() {
             isPlaying = false,
             isPlayerVisible = false,
             currentTrack = null,
-            isLoading = false, // Clear loading on reset
+            isLoading = false,
         )
     }
 
-    // Add method to create new task with proper title and description
+
     fun createTask(prompt: String) {
         val words = prompt.split(" ").filter { it.isNotBlank() }
         val title = words.take(4).joinToString(" ") // First 3-4 words for title
@@ -222,7 +209,6 @@ class MusicGPTViewModel : ViewModel() {
 
         _uiState.value = _uiState.value.copy(tasks = currentTasks)
 
-        // Start progress simulation
         simulateProgress(newTask.id, newTask.queueCount!!)
     }
 
@@ -248,16 +234,5 @@ class MusicGPTViewModel : ViewModel() {
                 _uiState.value = _uiState.value.copy(tasks = updatedTasks)
             }
         }
-    }
-
-    // Add skip functionality
-    fun skipTask(task: GenerationTask) {
-        val currentTasks = _uiState.value.tasks
-        val updatedTasks = currentTasks.map {
-            if (it.id == task.id) {
-                it.copy(progress = 100, queueCount = 0)
-            } else it
-        }
-        _uiState.value = _uiState.value.copy(tasks = updatedTasks)
     }
 }
