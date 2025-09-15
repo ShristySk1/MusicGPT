@@ -108,7 +108,7 @@ app/src/main/java/com/lalas/musicgpt/
    - Floating action button for new generation requests
 
 2. **Music Generation Flow**:
-   - Tap the "+" button to simulate starting a new generation
+   - Tap the "Create" button to simulate starting a new generation
    - Watch animated progress indicators and state transitions
    - Generated tracks automatically appear in the task list
 
@@ -144,7 +144,7 @@ The app includes three sample audio files (`sample1.mp3`, `sample2.mp3`, `sample
 ## 📱 Device Compatibility
 
 - **Minimum SDK**: API 24 (Android 7.0)
-- **Target SDK**: API 36 (Android 14)
+- **Target SDK**: API 36 (Android 16)
 - **Supported Architectures**: ARM64, ARM, x86, x86_64
 - **Screen Sizes**: Phone and tablet layouts (responsive design)
 
