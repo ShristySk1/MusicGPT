@@ -190,7 +190,7 @@ class MusicGPTViewModel : ViewModel() {
 
     fun createTask(prompt: String) {
         val words = prompt.split(" ").filter { it.isNotBlank() }
-        val title = words.take(4).joinToString(" ") // First 3-4 words for title
+        val title = words.take(3).joinToString(" ") // First 3-4 words for title
 
         val newTask = GenerationTask(
             id = UUID.randomUUID().toString(),
