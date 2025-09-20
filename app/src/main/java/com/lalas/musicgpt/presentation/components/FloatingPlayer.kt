@@ -19,8 +19,14 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import coil.compose.AsyncImage
+import coil.size.Dimension
 import com.lalas.musicgpt.R
 import com.lalas.musicgpt.data.model.GenerationTask
+import com.lalas.musicgpt.theme.Dimensions
+import com.lalas.musicgpt.theme.Dimensions.imageSize
+import com.lalas.musicgpt.theme.PlayerBackground
+import com.lalas.musicgpt.theme.PlayerBorder
 
 @Composable
 fun FloatingPlayerBar(
@@ -41,24 +47,26 @@ fun FloatingPlayerBar(
         modifier = modifier
             .padding(16.dp)
             .fillMaxWidth()
-            .height(80.dp),
+            .wrapContentHeight(),
         color = Color(0xE6000000), // Semi-transparent black
+        shape = RoundedCornerShape(Dimensions.cornerRadius),
         shadowElevation = 16.dp
     ) {
             Column {
                 Row(
                     modifier = Modifier
-                        .fillMaxSize()
+                        .wrapContentSize()
                         .background(
-                            color = Color(0x661D2125),
-                            shape = RoundedCornerShape(16.dp)
+                            color = PlayerBackground,
+                            shape = RoundedCornerShape(Dimensions.cornerRadius)
                         )
                         .border(
                             width = 1.dp,
-                            color = Color(0x0DFFFFFF),
-                            shape = RoundedCornerShape(16.dp)
+                            color = PlayerBorder,
+                            shape = RoundedCornerShape(Dimensions.cornerRadius)
                         )
-                        .padding(horizontal = 16.dp, vertical = 8.dp),
+                        .padding( vertical = 8.dp)
+                        .padding(start = 8.dp, end = 16.dp),
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
@@ -70,21 +78,17 @@ fun FloatingPlayerBar(
                         // Album Art
                         Box(
                             modifier = Modifier
-                                .size(56.dp)
-                                .clip(RoundedCornerShape(8.dp))
-                                .background(
-                                    brush = Brush.linearGradient(
-                                        colors = listOf(currentTrack.colorStart, currentTrack.colorEnd)
-                                    )
-                                ),
+                                .size(imageSize)
+                                .clip(RoundedCornerShape(Dimensions.cornerRadius)),
                             contentAlignment = Alignment.Center
-                        ) {
-                            // You can replace this with actual album art
-                            Text(
-                                text = currentTrack.title.take(2).uppercase(),
-                                color = Color.White,
-                                fontSize = 18.sp,
-                                fontWeight = FontWeight.Bold
+                        )  {
+                            AsyncImage(
+                                model = currentTrack.image,
+                                contentDescription = "Album Cover",
+                                modifier = Modifier
+                                    .size(imageSize),
+                                error = painterResource(R.drawable.property_1_finish), // Fallback
+                                placeholder = painterResource(R.drawable.property_1_finish)
                             )
                         }
 
@@ -99,13 +103,6 @@ fun FloatingPlayerBar(
                                 color = Color.White,
                                 fontSize = 16.sp,
                                 fontWeight = FontWeight.Medium,
-                                maxLines = 1,
-                                overflow = TextOverflow.Ellipsis
-                            )
-                            Text(
-                                text = currentTrack.description,
-                                color = Color.Gray,
-                                fontSize = 13.sp,
                                 maxLines = 1,
                                 overflow = TextOverflow.Ellipsis
                             )
@@ -126,6 +123,7 @@ fun FloatingPlayerBar(
                                 painter = painterResource(R.drawable.ic_previous),
                                 contentDescription = "Previous",
                                 tint = Color.White,
+                                modifier = Modifier.size(Dimensions.iconSize)
                             )
                         }
                         IconButton(
@@ -146,7 +144,7 @@ fun FloatingPlayerBar(
                                         painter = painterResource(R.drawable.ic_pause),
                                         contentDescription = "Pause",
                                         tint = Color.White,
-                                        modifier = Modifier.size(24.dp)
+                                        modifier = Modifier.size(Dimensions.iconSize)
                                     )
                                 }
                                 else -> {
@@ -154,7 +152,7 @@ fun FloatingPlayerBar(
                                         painter = painterResource(R.drawable.ic_play),
                                         contentDescription = "Play",
                                         tint = Color.White,
-                                        modifier = Modifier.size(24.dp)
+                                        modifier = Modifier.size(Dimensions.iconSize)
                                     )
                                 }
                             }
@@ -168,7 +166,8 @@ fun FloatingPlayerBar(
                             Icon(
                                 painter = painterResource(R.drawable.ic_next),
                                 contentDescription = "Next",
-                                tint = Color.White
+                                tint = Color.White,
+                                modifier = Modifier.size(Dimensions.iconSize)
                             )
                         }
                     }
@@ -176,32 +175,6 @@ fun FloatingPlayerBar(
             }
 
 
-        }
-        // Close Button - Top Right
-        Box(
-            modifier = Modifier
-                .padding(horizontal = 16.dp, vertical = 8.dp)
-                .align(Alignment.TopEnd)
-                .offset(x = (8).dp, y = (0).dp)
-                .size(24.dp)
-                .clip(CircleShape)
-                .background(
-                    color = Color(0xFF181B1E),
-                )
-                .border(
-                    width = 1.dp,
-                    color = Color(0x1AFFFFFF),
-                    shape = CircleShape
-                )
-                .clickable { onClose() },
-            contentAlignment = Alignment.Center
-        ) {
-            Icon(
-                painter = painterResource(R.drawable.ic_cross),
-                contentDescription = "Close",
-                tint = Color.White,
-                modifier = Modifier.size(12.dp)
-            )
         }
     }
 }
@@ -211,8 +184,6 @@ fun FloatingPlayerBarPreview() {
     val sampleTrack = GenerationTask(
         title = "Midnight Dreams",
         originalDescription = "Ambient Electronic",
-        colorStart = Color(0xFF6366F1),
-        colorEnd = Color(0xFF8B5CF6),
         image = R.drawable.property_1_finish,
         id = "123"
     )
@@ -236,8 +207,6 @@ fun FloatingPlayerBarPausedPreview() {
     val sampleTrack = GenerationTask(
         title = "Ocean Waves",
         originalDescription = "Nature Sounds",
-        colorStart = Color(0xFF06B6D4),
-        colorEnd = Color(0xFF0284C7),
         image = R.drawable.property_1_finish,
         id = "123"
     )
@@ -261,8 +230,6 @@ fun FloatingPlayerBarLoadingPreview() {
     val sampleTrack = GenerationTask(
         title = "Loading Track",
         originalDescription = "Please wait...",
-        colorStart = Color(0xFFEF4444),
-        colorEnd = Color(0xFFF97316),
         image = R.drawable.property_1_finish,
         id = "123"
     )

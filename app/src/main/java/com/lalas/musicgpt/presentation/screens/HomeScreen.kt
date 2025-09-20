@@ -29,6 +29,7 @@ import androidx.compose.ui.unit.sp
 import com.lalas.musicgpt.R
 import com.lalas.musicgpt.data.model.GenerationTask
 import com.lalas.musicgpt.presentation.components.TaskCard
+import com.lalas.musicgpt.theme.AppBackground
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -43,7 +44,7 @@ fun HomePage(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color.Black)
+            .background(AppBackground)
             .padding(horizontal = 16.dp)
     ) {
         // Header
@@ -67,14 +68,14 @@ fun HomePage(
                 }
             },
             colors = TopAppBarDefaults.topAppBarColors(
-                containerColor = Color.Black
+                containerColor = AppBackground
             )
         )
 
         // Task List - Now fills the entire remaining space
         LazyColumn(
             modifier = Modifier.fillMaxWidth(),
-            verticalArrangement = Arrangement.spacedBy(12.dp),
+            verticalArrangement = Arrangement.spacedBy(4.dp),
             contentPadding = PaddingValues(
                 top = 16.dp,
                 // Add bottom padding based on what's visible

@@ -8,8 +8,6 @@ data class GenerationTask(
     val originalDescription: String, // Store the original prompt
     val progress: Int = 0, // 0-100
     val queueCount: Int? = null, // For queue simulation
-    val colorStart: Color = Color(0xFFFF8504),
-    val colorEnd: Color = Color(0xFF990287),
     val audioUrl : Int? = null,
     val image :Int
 ) {

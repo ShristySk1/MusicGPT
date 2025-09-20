@@ -29,8 +29,6 @@ class MusicGPTViewModel : ViewModel() {
                 title = "Create a funky house",
                 originalDescription = "Create a funky house song with upbeat rhythm",
                 progress = 100,
-                colorStart = Color(0xFFE91E63),
-                colorEnd = Color(0xFF9C27B0),
                 audioUrl =  R.raw.sample1,
                 image = R.drawable.random_1
 
@@ -40,8 +38,6 @@ class MusicGPTViewModel : ViewModel() {
                 title = "Lo-fi hip hop",
                 originalDescription = "Lo-fi hip hop beats for studying and relaxation",
                 progress = 100,
-                colorStart = Color(0xFFE91E63),
-                colorEnd = Color(0xFF9C27B0),
                 audioUrl =R.raw.sample2,
                 image = R.drawable.random_2
             ),
@@ -50,8 +46,6 @@ class MusicGPTViewModel : ViewModel() {
                 title = "Classical piano composition",
                 originalDescription = "Classical piano composition in the style of Chopin",
                 progress = 100,
-                colorStart = Color(0xFF607D8B),
-                colorEnd = Color(0xFF455A64),
                 audioUrl = R.raw.sample1,
                 image = R.drawable.random_3
             ),
@@ -60,8 +54,6 @@ class MusicGPTViewModel : ViewModel() {
                 title = "Electronic dance music",
                 originalDescription = "Electronic dance music with heavy bass drops",
                 progress = 100,
-                colorStart = Color(0xFF795548),
-                colorEnd = Color(0xFF5D4037),
                 audioUrl = R.raw.sample2,
                 image = R.drawable.random_1
             ),
@@ -70,8 +62,6 @@ class MusicGPTViewModel : ViewModel() {
                 title = "Ambient space sounds",
                 originalDescription = "Ambient space sounds for meditation and focus",
                 progress = 100,
-                colorStart = Color(0xFF2196F3),
-                colorEnd = Color(0xFF1976D2),
                 audioUrl=R.raw.sample1,
                 image = R.drawable.random_2
             ),
@@ -198,8 +188,6 @@ class MusicGPTViewModel : ViewModel() {
             originalDescription = prompt, // Store original prompt
             progress = 0,
             queueCount = Random.nextInt(15000, 25000), // Random initial queue count
-            colorStart = Color(0xFFFF8504),
-            colorEnd = Color(0xFF990287),
             audioUrl = R.raw.sample3,
             image = R.drawable.property_1_finish
         )

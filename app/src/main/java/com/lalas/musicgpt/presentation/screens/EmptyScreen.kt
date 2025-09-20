@@ -16,6 +16,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.lalas.musicgpt.theme.AppBackground
 
 
 @Composable
@@ -23,7 +24,7 @@ fun EmptyScreen(title: String, emoji: String) {
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color(0xff0A0C0D))
+            .background(AppBackground)
             .padding(bottom = 80.dp),
         contentAlignment = Alignment.Center
     ) {

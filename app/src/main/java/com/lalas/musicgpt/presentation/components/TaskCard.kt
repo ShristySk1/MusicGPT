@@ -17,7 +17,6 @@ import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -25,8 +24,10 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
@@ -38,8 +39,11 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
+import coil.size.Dimension
 import com.lalas.musicgpt.R
 import com.lalas.musicgpt.data.model.GenerationTask
+import com.lalas.musicgpt.theme.AppBackground
+import com.lalas.musicgpt.theme.Dimensions
 import kotlin.random.Random
 
 @Composable
@@ -51,12 +55,12 @@ fun TaskCard(
 ) {
     val isCompleted = task.progress == 100
     val isInProgress = task.progress in 1..99
-    val imageSize= remember { 68.dp }
+    val imageSize= remember { Dimensions.imageSizeLarge }
 
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .height(imageSize)
+            .height(imageSize+16.dp)
             .then(
                 if (task.progress == 100 && !isCurrentlyPlaying) {
                     Modifier.clickable { onClick() }
@@ -64,9 +68,9 @@ fun TaskCard(
                     Modifier // No click modifier for incomplete tasks
                 }
             ),
-        shape = RoundedCornerShape(16.dp),
+        shape = RoundedCornerShape(Dimensions.cornerRadius),
         colors = CardDefaults.cardColors(
-            containerColor = if (isCurrentlyPlaying) Color(0x8D2C2C2C) else Color(0xFF000000)
+            containerColor = if (isCurrentlyPlaying) Color(0x8D2C2C2C) else AppBackground
         )
     ) {
         Box {
@@ -89,7 +93,7 @@ fun TaskCard(
 
             Row(
                 verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier.padding(4.dp)
+                modifier = Modifier.padding( vertical = 8.dp).padding(start = 8.dp)
             ) {
                 // Progress indicator with percentage images or album cover
                 Box(
@@ -98,14 +102,20 @@ fun TaskCard(
                     contentAlignment = Alignment.Center
                 ) {
                     if (isCompleted) {
-                        AsyncImage(
-                            model = task.image,
-                            contentDescription = "Album Cover",
+                        Box(
                             modifier = Modifier
-                                .size(imageSize),
-                            error = painterResource(R.drawable.property_1_finish), // Fallback
-                            placeholder = painterResource(R.drawable.property_1_finish)
-                        )
+                                .clip(RoundedCornerShape(Dimensions.cornerRadius)),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            AsyncImage(
+                                model = task.image,
+                                contentScale = ContentScale.FillBounds,
+                                modifier = Modifier.width(imageSize).height(imageSize),
+                                contentDescription = "Album Cover",
+                                error = painterResource(R.drawable.property_1_finish), // Fallback
+                                placeholder = painterResource(R.drawable.property_1_finish)
+                            )
+                        }
                     } else {
                         // Use different icons based on progress for incomplete tasks
                         val iconResource = when (task.progress) {
@@ -117,22 +127,25 @@ fun TaskCard(
                             in 90..99 -> R.drawable.property_1_90
                             else -> R.drawable.property_1_finish
                         }
-
-                        Icon(
-                            painter = painterResource(iconResource),
-                            contentDescription = "${task.progress}%",
-                            tint = Color.Unspecified,
-                            modifier = Modifier.size(imageSize)
+                        AsyncImage(
+                            model = (iconResource),
+                            contentScale = ContentScale.FillBounds,
+                            modifier = Modifier.width(imageSize).height(imageSize),
+                            contentDescription = "Playing",
+                            error = painterResource(R.drawable.property_1_finish), // Fallback
+                            placeholder = painterResource(R.drawable.property_1_finish)
                         )
                     }
 
                     // Show playing overlay only for the currently playing task
                     if (isCurrentlyPlaying) {
-                        Icon(
-                            painter = painterResource(R.drawable.playing),
+                        AsyncImage(
+                            model = (R.drawable.playing),
+                            contentScale = ContentScale.FillBounds,
+                            modifier = Modifier.width(imageSize).height(imageSize),
                             contentDescription = "Playing",
-                            tint = Color.Unspecified,
-                            modifier = Modifier.size(imageSize)
+                            error = painterResource(R.drawable.property_1_finish), // Fallback
+                            placeholder = painterResource(R.drawable.property_1_finish)
                         )
                     }
                 }
@@ -222,8 +235,6 @@ fun TaskCardVariousStatesPreview() {
             title = "Create a funky house",
             originalDescription = "Create a funky house song with upbeat rhythm",
             progress = 100,
-            colorStart = Color(0xFFE91E63),
-            colorEnd = Color(0xFF9C27B0),
             audioUrl =  R.raw.sample1,
             image = R.drawable.random_1
 
@@ -233,8 +244,6 @@ fun TaskCardVariousStatesPreview() {
             title = "Lo-fi hip hop",
             originalDescription = "Lo-fi hip hop beats for studying and relaxation",
             progress = 100,
-            colorStart = Color(0xFFE91E63),
-            colorEnd = Color(0xFF9C27B0),
             audioUrl =R.raw.sample2,
             image = R.drawable.random_2
         ),
@@ -243,8 +252,6 @@ fun TaskCardVariousStatesPreview() {
             title = "Classical piano composition",
             originalDescription = "Classical piano composition in the style of Chopin",
             progress = 100,
-            colorStart = Color(0xFF607D8B),
-            colorEnd = Color(0xFF455A64),
             audioUrl = R.raw.sample1,
             image = R.drawable.random_3
         ),
@@ -253,8 +260,6 @@ fun TaskCardVariousStatesPreview() {
             title = "Electronic dance music",
             originalDescription = "Electronic dance music with heavy bass drops",
             progress = 45,
-            colorStart = Color(0xFF795548),
-            colorEnd = Color(0xFF5D4037),
             audioUrl = R.raw.sample2,
             image = R.drawable.random_1,
             queueCount = 12300
@@ -264,8 +269,6 @@ fun TaskCardVariousStatesPreview() {
             title = "Ambient space sounds",
             originalDescription = "Ambient space sounds for meditation and focus",
             progress = 0,
-            colorStart = Color(0xFF2196F3),
-            colorEnd = Color(0xFF1976D2),
             audioUrl=R.raw.sample1,
             image = R.drawable.random_2
         ),
