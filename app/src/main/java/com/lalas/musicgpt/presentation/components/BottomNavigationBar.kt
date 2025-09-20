@@ -7,11 +7,14 @@ import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.NavigationBarItemDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.lalas.musicgpt.R
+import com.lalas.musicgpt.theme.PlayerBorder
 
 @Composable
 fun BottomNavigationBar(
@@ -22,7 +25,15 @@ fun BottomNavigationBar(
     NavigationBar(
         modifier = Modifier
             .fillMaxWidth()
-            .height(80.dp), // Fixed height for consistent spacing
+            .height(80.dp) // Fixed height for consistent spacing
+            .drawBehind {
+                drawLine(
+                    color =PlayerBorder,
+                    start = Offset(0f, 0f),
+                    end = Offset(size.width, 0f),
+                    strokeWidth = 1.dp.toPx()
+                )
+            },
         containerColor = Color(0xff0A0C0D),
         contentColor = Color.White,
     ) {
