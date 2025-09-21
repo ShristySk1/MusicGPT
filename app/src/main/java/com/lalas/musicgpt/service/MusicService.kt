@@ -12,11 +12,13 @@ import androidx.media3.session.MediaLibraryService
 import androidx.media3.session.MediaSession
 import com.lalas.musicgpt.data.constants.MusicConstants.NOTIFICATION_CHANNEL_ID
 import dagger.hilt.android.AndroidEntryPoint
+import javax.inject.Inject
 
 @AndroidEntryPoint
 class MusicService : MediaLibraryService() {
 
-    private var player: ExoPlayer? = null
+    @Inject
+    lateinit var player: ExoPlayer
     private var mediaLibrarySession: MediaLibrarySession? = null
 
     @OptIn(UnstableApi::class)
@@ -25,15 +27,13 @@ class MusicService : MediaLibraryService() {
 
         createNotificationChannel()
 
-        player = ExoPlayer.Builder(this).build()
-
         // Add listener to handle playback state changes
-        player!!.addListener(object : Player.Listener {
+        player.addListener(object : Player.Listener {
             override fun onPlaybackStateChanged(playbackState: Int) {
                 when (playbackState) {
                     Player.STATE_ENDED, Player.STATE_IDLE -> {
                         // Stop service when playback ends or becomes idle
-                        if (!player!!.playWhenReady) {
+                        if (!player.playWhenReady) {
                             stopSelf()
                         }
                     }
@@ -51,14 +51,12 @@ class MusicService : MediaLibraryService() {
             }
         })
 
-        mediaLibrarySession = MediaLibrarySession.Builder(this, player!!, object : MediaLibrarySession.Callback {
+        mediaLibrarySession = MediaLibrarySession.Builder(this, player, object : MediaLibrarySession.Callback {
             override fun onDisconnected(session: MediaSession, controller: MediaSession.ControllerInfo) {
                 super.onDisconnected(session, controller)
                 // When notification is dismissed or connection lost, stop playback
-                player?.let {
-                    it.stop()
-                    it.clearMediaItems()
-                }
+                player.stop()
+                player.clearMediaItems()
                 stopSelf()
             }
         })
@@ -94,7 +92,7 @@ class MusicService : MediaLibraryService() {
 
     override fun onDestroy() {
         mediaLibrarySession?.release()
-        player?.release()
+        player.release()
         super.onDestroy()
     }
 }

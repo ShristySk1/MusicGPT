@@ -6,15 +6,21 @@ import androidx.lifecycle.viewModelScope
 import com.lalas.musicgpt.R
 import com.lalas.musicgpt.data.model.GenerationTask
 import com.lalas.musicgpt.data.model.MusicGPTUiState
+import com.lalas.musicgpt.data.repository.MusicRepository
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import java.util.UUID
+import javax.inject.Inject
 import kotlin.random.Random
 
-class MusicGPTViewModel : ViewModel() {
+@HiltViewModel
+class MusicGPTViewModel @Inject constructor(
+    private val musicRepository: MusicRepository
+) : ViewModel() {
     private val _uiState = MutableStateFlow(MusicGPTUiState())
     val uiState: StateFlow<MusicGPTUiState> = _uiState.asStateFlow()
 
@@ -23,55 +29,14 @@ class MusicGPTViewModel : ViewModel() {
     }
 
     private fun loadTasks() {
-        val tasks = listOf(
-            GenerationTask(
-                id = "1",
-                title = "Create a funky house",
-                originalDescription = "Create a funky house song with upbeat rhythm",
-                progress = 100,
-                audioUrl =  R.raw.sample1,
-                image = R.drawable.random_1
-
-            ),
-            GenerationTask(
-                id = "2",
-                title = "Lo-fi hip hop",
-                originalDescription = "Lo-fi hip hop beats for studying and relaxation",
-                progress = 100,
-                audioUrl =R.raw.sample2,
-                image = R.drawable.random_2
-            ),
-            GenerationTask(
-                id = "3",
-                title = "Classical piano composition",
-                originalDescription = "Classical piano composition in the style of Chopin",
-                progress = 100,
-                audioUrl = R.raw.sample1,
-                image = R.drawable.random_3
-            ),
-            GenerationTask(
-                id = "4",
-                title = "Electronic dance music",
-                originalDescription = "Electronic dance music with heavy bass drops",
-                progress = 100,
-                audioUrl = R.raw.sample2,
-                image = R.drawable.random_1
-            ),
-            GenerationTask(
-                id = "5",
-                title = "Ambient space sounds",
-                originalDescription = "Ambient space sounds for meditation and focus",
-                progress = 100,
-                audioUrl=R.raw.sample1,
-                image = R.drawable.random_2
-            ),
-        )
-
-        _uiState.value = _uiState.value.copy(
-            tasks = tasks,
-            currentTrack = null,
-            isPlayerVisible = false
-        )
+        viewModelScope.launch {
+            val tasks = musicRepository.getTasks()
+            _uiState.value = _uiState.value.copy(
+                tasks = tasks,
+                currentTrack = null,
+                isPlayerVisible = false
+            )
+        }
     }
 
     fun playTrack(task: GenerationTask) {
@@ -192,34 +157,44 @@ class MusicGPTViewModel : ViewModel() {
             image = R.drawable.property_1_finish
         )
 
-        val currentTasks = _uiState.value.tasks.toMutableList()
-        currentTasks.add(newTask)
-
-        _uiState.value = _uiState.value.copy(tasks = currentTasks)
-
-        simulateProgress(newTask.id, newTask.queueCount!!)
+        viewModelScope.launch {
+            musicRepository.addTask(newTask)
+            
+            // Update UI state
+            val updatedTasks = musicRepository.getTasks()
+            _uiState.value = _uiState.value.copy(tasks = updatedTasks)
+            
+            simulateProgress(newTask.id, newTask.queueCount!!)
+        }
     }
 
     private fun simulateProgress(taskId: String, initialQueueCount: Int) {
         viewModelScope.launch {
             for (progress in 0..100 step 1) {
                 delay(100) // Simulate work
-                val currentTasks = _uiState.value.tasks
-                val updatedTasks = currentTasks.map { task ->
-                    if (task.id == taskId) {
-                        val newQueueCount = if (progress > 0) {
-                            // Gradually decrease queue count as progress increases
-                            val remainingRatio = (100 - progress) / 100f
-                            (initialQueueCount * remainingRatio).toInt()
-                        } else initialQueueCount
+                
+                val currentTasks = musicRepository.getTasks()
+                val taskToUpdate = currentTasks.find { it.id == taskId }
+                
+                taskToUpdate?.let { task ->
+                    val newQueueCount = if (progress > 0) {
+                        // Gradually decrease queue count as progress increases
+                        val remainingRatio = (100 - progress) / 100f
+                        (initialQueueCount * remainingRatio).toInt()
+                    } else initialQueueCount
 
-                        task.copy(
-                            progress = progress,
-                            queueCount = newQueueCount
-                        )
-                    } else task
+                    val updatedTask = task.copy(
+                        progress = progress,
+                        queueCount = newQueueCount
+                    )
+                    
+                    // Update task in repository
+                    musicRepository.updateTask(updatedTask)
+                    
+                    // Update UI state
+                    val updatedTasks = musicRepository.getTasks()
+                    _uiState.value = _uiState.value.copy(tasks = updatedTasks)
                 }
-                _uiState.value = _uiState.value.copy(tasks = updatedTasks)
             }
         }
     }

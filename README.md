@@ -21,10 +21,11 @@ A sophisticated Android application that simulates the "Prompt to Music Generati
 - **Kotlin**: 2.0.21
 
 ### Architecture & Patterns
-- **MVVM (Model-View-ViewModel)**: Clean separation of concerns
+- **MVVM (Model-View-ViewModel)**: Clean separation of concerns with Repository pattern
 - **Clean Architecture**: Layered architecture with data, domain, and presentation layers
-- **Dependency Injection**: Hilt for managing dependencies
-- **State Management**: Reactive UI with Compose state management
+- **Repository Pattern**: Data abstraction layer between ViewModels and data sources
+- **Dependency Injection**: Hilt for managing dependencies across all layers
+- **State Management**: Reactive UI with Compose state management and StateFlow
 
 ### Key Libraries
 - **Hilt**: `2.52` - Dependency injection framework
@@ -41,14 +42,23 @@ The application follows a clean, modular architecture:
 app/src/main/java/com/lalas/musicgpt/
 ├── data/                    # Data Layer
 │   ├── constants/          # App-wide constants
+│   ├── datasource/        # Data source abstractions and implementations
+│   │   ├── MusicDataSource.kt           # Data source interface
+│   │   └── LocalMusicDataSource.kt      # Static data implementation
 │   ├── model/             # Data models and UI state
-│   └── repository/        # Data repositories (future implementation)
+│   │   ├── GenerationTask.kt            # Task data model
+│   │   └── MusicGPTUiState.kt          # UI state model
+│   └── repository/        # Repository layer for data management
+│       ├── MusicRepository.kt           # Repository interface
+│       └── MusicRepositoryImpl.kt       # Repository implementation
 ├── di/                     # Dependency Injection
-│   └── PlayerModule.kt    # Audio player dependencies
+│   ├── PlayerModule.kt    # Audio player dependencies
+│   └── RepositoryModule.kt # Repository and data source bindings
 ├── presentation/           # Presentation Layer
 │   ├── components/        # Reusable UI components
 │   ├── screens/          # App screens
 │   └── viewmodels/       # ViewModels for state management
+│       └── MusicGPTViewModel.kt        # Main ViewModel with repository injection
 ├── service/               # Background Services
 │   ├── MusicService.kt   # Foreground service for audio playback
 │   └── NotificationDismissReceiver.kt
@@ -58,10 +68,22 @@ app/src/main/java/com/lalas/musicgpt/
 
 ### Key Components
 
-1. **MusicGPTViewModel**: Manages app state and business logic
-2. **MusicService**: Handles background audio playback with Media3
-3. **FloatingPlayer**: Persistent mini-player component
-4. **TaskCard**: Displays generation tasks with progress indicators
+#### **Presentation Layer**
+1. **MusicGPTViewModel**: Manages app state and UI logic with Hilt dependency injection
+2. **FloatingPlayer**: Persistent mini-player component
+3. **TaskCard**: Displays generation tasks with progress indicators
+
+#### **Data Layer**  
+4. **MusicRepository**: Abstracts data operations and manages business logic
+5. **MusicDataSource**: Provides data from various sources (local, remote, etc.)
+6. **LocalMusicDataSource**: Implementation for static/demo data
+
+#### **Service Layer**
+7. **MusicService**: Handles background audio playback with Media3 and Hilt injection
+
+#### **Dependency Injection**
+8. **PlayerModule**: Provides ExoPlayer instance
+9. **RepositoryModule**: Binds repository and data source implementations
 
 ## 🚀 Getting Started
 
@@ -149,6 +171,12 @@ The app includes three sample audio files (`sample1.mp3`, `sample2.mp3`, `sample
 - **Screen Sizes**: Phone and tablet layouts (responsive design)
 
 ## 🔧 Development Notes
+
+### Architecture Implementation
+- **MVVM**: Complete implementation with Repository pattern
+- **Dependency Injection**: Full Hilt integration across all layers
+- **Data Flow**: UI → ViewModel → Repository → DataSource
+- **State Management**: Reactive streams with StateFlow and Compose State
 
 ### Build Configuration
 - **Compile SDK**: 36

@@ -73,6 +73,7 @@ import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.media3.common.MediaItem
 import androidx.media3.common.MediaMetadata
 import androidx.media3.common.PlaybackException
@@ -93,7 +94,7 @@ import kotlinx.coroutines.guava.await
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun MusicGPTApp() {
-    val viewModel = remember { MusicGPTViewModel() }
+    val viewModel: MusicGPTViewModel = hiltViewModel()
     val uiState by viewModel.uiState.collectAsState()
     var selectedTab by remember { mutableStateOf(0) }
 
