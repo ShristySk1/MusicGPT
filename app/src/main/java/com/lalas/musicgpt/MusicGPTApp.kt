@@ -4,6 +4,12 @@ import android.content.ComponentName
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.FastOutLinearInEasing
 import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.LinearEasing
+import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -30,6 +36,7 @@ import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
@@ -42,7 +49,9 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
@@ -52,6 +61,7 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.graphics.drawscope.rotate
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
@@ -60,6 +70,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Density
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.media3.common.MediaItem
@@ -327,6 +338,7 @@ fun MusicGPTApp() {
         }
 
         if (showCreateInput) {
+
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -385,84 +397,92 @@ fun MusicGPTApp() {
                         ),
                     contentAlignment = Alignment.CenterStart
                 ) {
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.SpaceBetween,
+                    InputWithAnimatedBorder(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(horizontal = 8.dp)
+                            .height(52.dp),
+                        isActive = true, // or based on focus state
+                        borderWidth = 2.dp,
+                        cornerRadius = 26.dp
                     ) {
-                        IconButton(
-                            onClick = {
-
-                            }
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 8.dp)
                         ) {
-                            Icon(
-                                painter = painterResource(R.drawable.ic_add),
-                                contentDescription = "Close",
-                                tint = Color.White
-                            )
-                        }
+                            IconButton(
+                                onClick = {
 
-                        BasicTextField(
-                            value = inputText,
-                            onValueChange = { inputText = it },
-                            singleLine = true,
-                            textStyle = TextStyle(
-                                color = Color.White,
-                                fontSize = 16.sp,
-                                fontWeight = FontWeight.Medium
-                            ),
-                            cursorBrush = SolidColor(Color.White),
-                            keyboardOptions = KeyboardOptions(
-                                imeAction = ImeAction.Send
-                            ),
-                            keyboardActions = KeyboardActions(
-                                onSend = {
+                                }
+                            ) {
+                                Icon(
+                                    painter = painterResource(R.drawable.ic_add),
+                                    contentDescription = "Close",
+                                    tint = Color.White
+                                )
+                            }
+
+                            BasicTextField(
+                                value = inputText,
+                                onValueChange = { inputText = it },
+                                singleLine = true,
+                                textStyle = TextStyle(
+                                    color = Color.White,
+                                    fontSize = 16.sp,
+                                    fontWeight = FontWeight.Medium
+                                ),
+                                cursorBrush = SolidColor(Color.White),
+                                keyboardOptions = KeyboardOptions(
+                                    imeAction = ImeAction.Send
+                                ),
+                                keyboardActions = KeyboardActions(
+                                    onSend = {
+                                        if (inputText.isNotBlank()) {
+                                            viewModel.createTask(inputText.trim())
+                                            showCreateInput = false
+                                            inputText = ""
+                                        }
+                                    }
+                                ),
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .padding(horizontal = 6.dp)
+                                    .focusRequester(focusRequester),
+                                decorationBox = { innerTextField ->
+                                    Box {
+                                        if (inputText.isEmpty()) {
+                                            Text(
+                                                "Create song",
+                                                color = Color(0xff777A80),
+                                                fontSize = 16.sp
+                                            )
+                                        }
+                                        innerTextField()
+                                    }
+                                }
+                            )
+
+                            IconButton(
+                                onClick = {
                                     if (inputText.isNotBlank()) {
                                         viewModel.createTask(inputText.trim())
                                         showCreateInput = false
                                         inputText = ""
                                     }
                                 }
-                            ),
-                            modifier = Modifier
-                                .weight(1f)
-                                .padding(horizontal = 6.dp)
-                                .focusRequester(focusRequester),
-                            decorationBox = { innerTextField ->
-                                Box {
-                                    if (inputText.isEmpty()) {
-                                        Text(
-                                            "Create song",
-                                            color = Color(0xff777A80),
-                                            fontSize = 16.sp
-                                        )
-                                    }
-                                    innerTextField()
-                                }
+                            ) {
+                                Icon(
+                                    painter = painterResource(R.drawable.ic_send),
+                                    contentDescription = "Send",
+                                    tint = Color.Unspecified
+                                )
                             }
-                        )
-
-                        IconButton(
-                            onClick = {
-                                if (inputText.isNotBlank()) {
-                                    viewModel.createTask(inputText.trim())
-                                    showCreateInput = false
-                                    inputText = ""
-                                }
-                            }
-                        ) {
-                            Icon(
-                                painter = painterResource(R.drawable.ic_send),
-                                contentDescription = "Send",
-                                tint = Color.Unspecified
-                            )
                         }
                     }
                 }
             }
-
         }
 
         // Floating Player with smooth animations - positioned above bottom nav
@@ -509,6 +529,80 @@ fun MusicGPTApp() {
                     viewModel.setPlayerVisible(false)
                 }
             )
+        }
+    }
+}
+@Composable
+fun InputWithAnimatedBorder(
+    modifier: Modifier = Modifier,
+    isActive: Boolean = true,
+    borderWidth: Dp = 2.dp,
+    cornerRadius: Dp = 26.dp,
+    content: @Composable () -> Unit
+) {
+    // Infinite rotation animation
+    val infiniteTransition = rememberInfiniteTransition(label = "inputBorderAnimation")
+    val angle by infiniteTransition.animateFloat(
+        initialValue = 0f,
+        targetValue = 360f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(3000, easing = LinearEasing),
+            repeatMode = RepeatMode.Restart
+        ),
+        label = "inputRotationAngle"
+    )
+
+    // Animate border visibility based on active state
+    val borderAlpha by animateFloatAsState(
+        targetValue = if (isActive) 1f else 0f,
+        animationSpec = tween(
+            durationMillis = 1800,
+            easing = LinearEasing
+        ),
+        label = "inputBorderAlpha"
+    )
+
+    // Gradient colors for the animated border
+    val borderColors = listOf(
+        Color(0xFFFF8504), // Orange
+        Color(0xFF990287), // Purple with alpha
+        Color(0x00000000), // Transparent
+        Color(0x00000000), // Transparent
+        Color(0xFFFF8504), // Orange again for seamless loop
+    )
+
+    val brush = Brush.sweepGradient(borderColors)
+
+    // Outer surface for border
+    Surface(
+        modifier = modifier,
+        shape = RoundedCornerShape(cornerRadius + borderWidth),
+        color = Color.Transparent
+    ) {
+        // Inner surface with animated border
+        Surface (
+            modifier = Modifier
+                .clipToBounds()
+                .fillMaxSize()
+                .padding(borderWidth) // Border thickness
+                .drawWithContent {
+                    if (borderAlpha > 0f) {
+                        rotate(angle) {
+                            rotate(angle) {
+                                drawCircle(
+                                    brush = brush,
+                                    radius = size.width,
+                                    blendMode = BlendMode.ColorDodge,
+                                )
+                            }
+                        }
+                    }
+                    drawContent()
+                },
+            color = Color.Black,
+            shape = RoundedCornerShape(cornerRadius)
+        ) {
+            content()
         }
     }
 }
