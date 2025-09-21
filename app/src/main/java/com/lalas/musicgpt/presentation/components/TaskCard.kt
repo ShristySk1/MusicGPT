@@ -1,21 +1,49 @@
 package com.lalas.musicgpt.presentation.components
 
-import androidx.compose.animation.*
-import androidx.compose.animation.core.*
+import androidx.compose.animation.Crossfade
+import androidx.compose.animation.core.LinearEasing
+import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.animateIntAsState
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.clipToBounds
+import androidx.compose.ui.draw.drawWithContent
+import androidx.compose.ui.graphics.BlendMode
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.graphics.drawscope.rotate
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.SpanStyle
@@ -25,6 +53,7 @@ import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
@@ -32,7 +61,6 @@ import com.lalas.musicgpt.R
 import com.lalas.musicgpt.data.model.GenerationTask
 import com.lalas.musicgpt.theme.AppBackground
 import com.lalas.musicgpt.theme.Dimensions
-import kotlin.math.sin
 import kotlin.random.Random
 
 @Composable
@@ -45,29 +73,6 @@ fun TaskCard(
     val isCompleted = task.progress == 100
     val isInProgress = task.progress in 1..99
     val imageSize = remember { Dimensions.imageSizeLarge }
-
-    // Subtle breathing animation for in-progress items
-    val infiniteTransition = rememberInfiniteTransition(label = "breathing")
-    val breathingScale by infiniteTransition.animateFloat(
-        initialValue = 1f,
-        targetValue = 1.02f,
-        animationSpec = infiniteRepeatable(
-            animation = tween(2500, easing = FastOutSlowInEasing),
-            repeatMode = RepeatMode.Reverse
-        ),
-        label = "breathingScale"
-    )
-
-    // Gentle glow animation for progress
-    val glowAlpha by infiniteTransition.animateFloat(
-        initialValue = 0.0f,
-        targetValue = 0.15f,
-        animationSpec = infiniteRepeatable(
-            animation = tween(2000, easing = FastOutSlowInEasing),
-            repeatMode = RepeatMode.Reverse
-        ),
-        label = "glowAlpha"
-    )
 
 
     Card(
@@ -131,52 +136,54 @@ fun TaskCard(
                             )
                         }
                     } else {
-                        // Crossfade between icons based on progress key
-                        val progressKey = when (task.progress) {
-                            0 -> "0"
-                            in 1..24 -> "0"
-                            in 25..49 -> "25"
-                            in 50..74 -> "50"
-                            in 75..89 ->"75"
-                            in 90..99 -> "90"
-                            100 -> "100"
+                        val progressKey = when {
+                            task.progress == 0 -> "0"
+                            task.progress in 1..15 -> "0"
+                            task.progress in 16..35 -> "25"
+                            task.progress in 36..55 -> "50"
+                            task.progress in 56..75 -> "75"
+                            task.progress in 76..99 -> "90"
+                            task.progress == 100 -> "100"
+                            task.isCompleted -> "finish"
                             else -> "complete"
                         }
 
-                        Crossfade(
-                            targetState = progressKey,
-                            animationSpec = tween(
-                                durationMillis = 900,
-                                easing = CubicBezierEasing(0.4f, 0.0f, 0.2f, 1.0f)
-                            ),
-                            label = "iconCrossfade"
-                        ) { key ->
-                            val iconRes = when (key) {
-                                "0" -> R.drawable.property_1_0
-                                "25" -> R.drawable.property_1_25
-                                "50" -> R.drawable.property_1_50
-                                "75" -> R.drawable.property_1_75
-                                "90" -> R.drawable.property_1_90
-                                "finish" -> R.drawable.property_1_finish
-                                else -> R.drawable.property_1_finish
-                            }
+                        ImageWithAnimatedBorder (
+                            progress = task.progress,
+                            imageSize = imageSize,
+                        ) {
+                            // Your existing Crossfade with drawables
+                            Crossfade(
+                                targetState = progressKey,
+                                animationSpec = tween(
+                                    durationMillis = 1800,
+                                    delayMillis = 1,
+                                    easing = LinearEasing
+                                ),
+                                label = "iconCrossfade"
+                            ) { key ->
+                                val iconRes = when (key) {
+                                    "0" -> R.drawable.property_1_0
+                                    "25" -> R.drawable.property_1_25
+                                    "50" -> R.drawable.property_1_50
+                                    "75" -> R.drawable.property_1_75
+                                    "90" -> R.drawable.property_1_90
+                                    "100" -> R.drawable.property_1_100
+                                    "finish" -> R.drawable.property_1_finish
+                                    else -> R.drawable.property_1_finish
+                                }
 
-                            AsyncImage(
-                                model = iconRes,
-                                contentScale = ContentScale.FillBounds,
-                                modifier = Modifier
-                                    .width(imageSize)
-                                    .height(imageSize)
-                                    .graphicsLayer {
-                                        // Breathing animation only on the image itself
-                                        scaleX = breathingScale
-                                        scaleY = breathingScale
-                                        shadowElevation = if (isInProgress) 4.dp.toPx() else 0f
-                                    },
-                                contentDescription = "Progress",
-                                error = painterResource(R.drawable.property_1_finish),
-                                placeholder = painterResource(R.drawable.property_1_finish)
-                            )
+                                AsyncImage(
+                                    model = iconRes,
+                                    contentScale = ContentScale.FillBounds,
+                                    modifier = Modifier
+                                        .fillMaxSize() // Fill the inner box
+                                        .clip(RoundedCornerShape(16.dp)), // Slightly smaller radius for inner content
+                                    contentDescription = "Progress",
+                                    error = painterResource(R.drawable.property_1_finish),
+                                    placeholder = painterResource(R.drawable.property_1_finish)
+                                )
+                            }
                         }
                     }
 
@@ -262,11 +269,150 @@ fun TaskCard(
                 }
             }
         }
+
+    }
+}
+@Composable
+fun DirectAnimatedBorder(
+    progress: Int,
+    imageSize: Dp,
+    content: @Composable () -> Unit
+) {
+    val infiniteTransition = rememberInfiniteTransition(label = "border")
+    val angle by infiniteTransition.animateFloat(
+        initialValue = 0f,
+        targetValue = 360f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(1500, easing = LinearEasing),
+            repeatMode = RepeatMode.Restart
+        ),
+        label = "angle"
+    )
+
+    val animatedProgress by animateIntAsState(
+        targetValue = progress,
+        animationSpec = tween(1800, delayMillis = 1, easing = LinearEasing),
+        label = "progress"
+    )
+
+    val borderAlpha = (animatedProgress / 100f).coerceIn(0f, 1f)
+    val borderColors = if (borderAlpha > 0f) {
+        listOf(
+            Color(0xFFFF6200).copy(alpha = borderAlpha),
+            Color(0x80AA00FF).copy(alpha = borderAlpha),
+            Color(0x00000000)
+        )
+    } else {
+        listOf(Color.Transparent)
+    }
+
+    val brush = Brush.sweepGradient(borderColors)
+
+    Surface(
+        modifier = Modifier.size(imageSize),
+        shape = RoundedCornerShape(16.dp)
+    ) {
+        Surface(
+            modifier = Modifier
+                .clipToBounds()
+                .fillMaxSize()
+                .padding(2.dp)
+                .drawWithContent {
+                    if (borderAlpha > 0f) {
+                        rotate(angle) {
+                            drawCircle(
+                                brush = brush,
+                                radius = size.width,
+                                blendMode = BlendMode.SrcIn,
+                            )
+                        }
+                    }
+                    drawContent()
+                },
+            color = Color.Transparent,
+            shape = RoundedCornerShape(14.dp)
+        ) {
+            content()
+        }
     }
 }
 
+@Composable
+fun ImageWithAnimatedBorder(
+    progress: Int,
+    imageSize: Dp,
+    modifier: Modifier = Modifier,
+    content: @Composable () -> Unit
+) {
+    // Infinite rotation animation
+    val infiniteTransition = rememberInfiniteTransition(label = "borderAnimation")
+    val angle by infiniteTransition.animateFloat(
+        initialValue = 0f,
+        targetValue = 360f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(1500, easing = LinearEasing),
+            repeatMode = RepeatMode.Restart
+        ),
+        label = "rotationAngle"
+    )
 
+    // Animate progress for border visibility
+    val animatedProgress by animateIntAsState(
+        targetValue = progress,
+        animationSpec = tween(
+            durationMillis = 1800,
+            delayMillis = 1,
+            easing = LinearEasing
+        ),
+        label = "borderProgress"
+    )
 
+    // Your 3 colors with animated alpha
+    val borderAlpha = (animatedProgress / 100f).coerceIn(0f, 1f)
+    val borderColors = listOf(
+        Color(0xFFFF6200), // Orange
+        Color(0x80AA00FF), // Purple with alpha
+        Color(0x00000000), // Transparent
+        Color(0x00000000), // Transparent
+        Color(0xFFFF6200), // Faded orange
+    )
+
+    val brush = if (borderAlpha >= 0f) {
+        Brush.sweepGradient(borderColors)
+    } else {
+        Brush.sweepGradient(listOf(Color.Transparent, Color.Transparent))
+    }
+
+    // Outer surface for border
+    Surface(
+        modifier = modifier.size(imageSize + 1.dp),
+        shape = RoundedCornerShape(18.dp)
+    ) {
+        // Inner surface with animated border
+        Surface(
+            modifier = Modifier
+                .clipToBounds()
+                .fillMaxSize()
+                .padding(1.dp) // Border thickness
+                .drawWithContent {
+                    if (borderAlpha >= 0f) {
+                        rotate(angle) {
+                            drawCircle(
+                                brush = brush,
+                                radius = size.width,
+                                blendMode = BlendMode.ColorDodge,
+                            )
+                        }
+                    }
+                    drawContent()
+                },
+            color = Color.Black,
+            shape = RoundedCornerShape(16.dp)
+        ) {
+            content()
+        }
+    }
+}
 @Preview(showBackground = true, backgroundColor = 0xFF121212)
 @Composable
 fun TaskCardVariousStatesPreview() {
