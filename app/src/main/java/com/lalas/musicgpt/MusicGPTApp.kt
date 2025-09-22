@@ -363,100 +363,42 @@ fun MusicGPTApp() {
                         .fillMaxWidth(0.9f) // glow box width
                         .height(52.dp)
                         .drawBehind {
-                            // Outermost glow (largest, most transparent)
-                            drawRoundRect(
-                                brush = gradientBrush,
-                                cornerRadius = CornerRadius(26.dp.toPx()),
-                                style = Stroke(width = 20.dp.toPx()),
-                                alpha = 0.05f,
-                                blendMode = BlendMode.Screen
-                            )
-
-                            // Second outer glow
-                            drawRoundRect(
-                                brush = gradientBrush,
-                                cornerRadius = CornerRadius(26.dp.toPx()),
-                                style = Stroke(width = 16.dp.toPx()),
-                                alpha = 0.08f,
-                                blendMode = BlendMode.Screen
-                            )
-
-                            // Third outer glow
+                            // Outer glow
                             drawRoundRect(
                                 brush = gradientBrush,
                                 cornerRadius = CornerRadius(26.dp.toPx()),
                                 style = Stroke(width = 12.dp.toPx()),
-                                alpha = 0.12f,
+                                alpha = 0.1f,
                                 blendMode = BlendMode.Screen
                             )
-
-                            // Middle glow (enhanced)
+                            // Middle glow
                             drawRoundRect(
                                 brush = gradientBrush,
                                 cornerRadius = CornerRadius(26.dp.toPx()),
-                                style = Stroke(width = 8.dp.toPx()),
-                                alpha = 0.25f,
+                                style = Stroke(width = 6.dp.toPx()),
+                                alpha = 0.3f,
                                 blendMode = BlendMode.Screen
                             )
-
-                            // Inner glow (brighter)
+                            // Inner glow
                             drawRoundRect(
                                 brush = gradientBrush,
                                 cornerRadius = CornerRadius(26.dp.toPx()),
-                                style = Stroke(width = 4.dp.toPx()),
-                                alpha = 0.5f,
-                                blendMode = BlendMode.Screen
+                                style = Stroke(width = 3.dp.toPx()),
+                                alpha = 0.6f
                             )
-
-                            // Sharp border (brightest)
+                            // Sharp border
                             drawRoundRect(
                                 brush = gradientBrush,
                                 cornerRadius = CornerRadius(26.dp.toPx()),
-                                style = Stroke(width = 1.5.dp.toPx()),
-                                alpha = 0.9f
+                                style = Stroke(width = 1.dp.toPx())
                             )
                         }
                         .shadow(
-                            elevation = 32.dp, // Increased from 20.dp
+                            elevation = 20.dp,
                             shape = RoundedCornerShape(26.dp),
                             ambientColor = Color(0xFFFF8504),
                             spotColor = Color(0xFFFF8504)
                         )
-                        // Additional shadow layers for more glow
-                        .drawBehind {
-                            // Extra ambient glow using drawCircle for softer edges
-                            val center = Offset(size.width / 2, size.height / 2)
-
-                            // Large soft glow
-                            drawCircle(
-                                brush = Brush.radialGradient(
-                                    colors = listOf(
-                                        Color(0x20FF8504),
-                                        Color(0x10FF8504),
-                                        Color.Transparent
-                                    ),
-                                    radius = size.width * 0.8f
-                                ),
-                                radius = size.width * 0.7f,
-                                center = center,
-                                blendMode = BlendMode.Screen
-                            )
-
-                            // Medium soft glow
-                            drawCircle(
-                                brush = Brush.radialGradient(
-                                    colors = listOf(
-                                        Color(0x30FF8504),
-                                        Color(0x15FF8504),
-                                        Color.Transparent
-                                    ),
-                                    radius = size.width * 0.6f
-                                ),
-                                radius = size.width * 0.5f,
-                                center = center,
-                                blendMode = BlendMode.Screen
-                            )
-                        }
                         .background(
                             Color(0xff16191C),
                             RoundedCornerShape(26.dp)
@@ -468,7 +410,7 @@ fun MusicGPTApp() {
                             .fillMaxWidth()
                             .height(52.dp),
                         isActive = true, // or based on focus state
-                        borderWidth = 2.dp,
+                        borderWidth = 1.dp,
                         cornerRadius = 26.dp
                     ) {
                         Row(
@@ -618,28 +560,6 @@ fun InputWithAnimatedBorder(
         label = "inputRotationAngle"
     )
 
-    // Animate shadow intensity
-    val shadowPulse by infiniteTransition.animateFloat(
-        initialValue = 0.3f,
-        targetValue = 1f,
-        animationSpec = infiniteRepeatable(
-            animation = tween(1500, easing = FastOutSlowInEasing),
-            repeatMode = RepeatMode.Reverse
-        ),
-        label = "shadowPulse"
-    )
-
-    // Animate shadow spread
-    val shadowSpread by infiniteTransition.animateFloat(
-        initialValue = 8f,
-        targetValue = 20f,
-        animationSpec = infiniteRepeatable(
-            animation = tween(2000, easing = FastOutSlowInEasing),
-            repeatMode = RepeatMode.Reverse
-        ),
-        label = "shadowSpread"
-    )
-
     // Animate border visibility based on active state
     val borderAlpha by animateFloatAsState(
         targetValue = if (isActive) 1f else 0f,
@@ -653,7 +573,7 @@ fun InputWithAnimatedBorder(
     // Gradient colors for the animated border
     val borderColors = listOf(
         Color(0xFFFF8504), // Orange
-        Color(0xFF990287), // Purple
+        Color(0xFF990287), // Purple with alpha
         Color(0x00000000), // Transparent
         Color(0x00000000), // Transparent
         Color(0xFFFF8504), // Orange again for seamless loop
@@ -661,88 +581,21 @@ fun InputWithAnimatedBorder(
 
     val brush = Brush.sweepGradient(borderColors)
 
-    // Calculate shadow color based on rotation angle
-    val shadowColorProgress = (angle / 360f)
-    val shadowColor = when {
-        shadowColorProgress < 0.5f -> {
-            // Interpolate from orange to purple
-            lerp(Color(0xFFFF8504), Color(0xFF990287), shadowColorProgress * 2f)
-        }
-        else -> {
-            // Interpolate from purple back to orange
-            lerp(Color(0xFF990287), Color(0xFFFF8504), (shadowColorProgress - 0.5f) * 2f)
-        }
-    }
-
-    // Container with animated shadow
-    Box(
-        modifier = modifier
-            .drawBehind {
-                if (isActive && borderAlpha > 0f) {
-                    // Draw multiple shadow layers for glow effect
-                    val shadowAlpha = borderAlpha * shadowPulse
-
-                    // Outer glow
-                    drawRoundRect(
-                        color = shadowColor.copy(alpha = 0.1f * shadowAlpha),
-                        size = size,
-                        cornerRadius = CornerRadius(
-                            (cornerRadius + borderWidth).toPx()
-                        ),
-                        style = Stroke(
-                            width = shadowSpread.dp.toPx(),
-                            pathEffect = PathEffect.cornerPathEffect(
-                                (cornerRadius + borderWidth).toPx()
-                            )
-                        )
-                    )
-
-                    // Middle glow
-                    drawRoundRect(
-                        color = shadowColor.copy(alpha = 0.2f * shadowAlpha),
-                        size = size,
-                        cornerRadius = CornerRadius(
-                            (cornerRadius + borderWidth).toPx()
-                        ),
-                        style = Stroke(
-                            width = (shadowSpread * 0.6f).dp.toPx(),
-                            pathEffect = PathEffect.cornerPathEffect(
-                                (cornerRadius + borderWidth).toPx()
-                            )
-                        )
-                    )
-
-                    // Inner glow
-                    drawRoundRect(
-                        color = shadowColor.copy(alpha = 0.3f * shadowAlpha),
-                        size = size,
-                        cornerRadius = CornerRadius(
-                            (cornerRadius + borderWidth).toPx()
-                        ),
-                        style = Stroke(
-                            width = (shadowSpread * 0.3f).dp.toPx(),
-                            pathEffect = PathEffect.cornerPathEffect(
-                                (cornerRadius + borderWidth).toPx()
-                            )
-                        )
-                    )
-                }
-            }
+    // Outer surface for border
+    Surface(
+        modifier = modifier,
+        shape = RoundedCornerShape(cornerRadius + borderWidth),
+        color = Color.Transparent
     ) {
-        // Outer surface for border
-        Surface(
-            modifier = Modifier.fillMaxSize(),
-            shape = RoundedCornerShape(cornerRadius + borderWidth),
-            color = Color.Transparent
-        ) {
-            // Inner surface with animated border
-            Surface(
-                modifier = Modifier
-                    .clipToBounds()
-                    .fillMaxSize()
-                    .padding(borderWidth) // Border thickness
-                    .drawWithContent {
-                        if (borderAlpha > 0f) {
+        // Inner surface with animated border
+        Surface (
+            modifier = Modifier
+                .clipToBounds()
+                .fillMaxSize()
+                .padding(borderWidth) // Border thickness
+                .drawWithContent {
+                    if (borderAlpha > 0f) {
+                        rotate(angle) {
                             rotate(angle) {
                                 drawCircle(
                                     brush = brush,
@@ -751,36 +604,17 @@ fun InputWithAnimatedBorder(
                                 )
                             }
                         }
-                        drawContent()
-                    },
-                color = Color.Black,
-                shape = RoundedCornerShape(cornerRadius)
-            ) {
-                content()
-            }
+                    }
+                    drawContent()
+                },
+            color = Color.Black,
+            shape = RoundedCornerShape(cornerRadius)
+        ) {
+            content()
         }
     }
 }
 
-// Helper function for color interpolation
-fun lerp(start: Color, end: Color, fraction: Float): Color {
-    return Color(
-        red = start.red + (end.red - start.red) * fraction,
-        green = start.green + (end.green - start.green) * fraction,
-        blue = start.blue + (end.blue - start.blue) * fraction,
-        alpha = start.alpha + (end.alpha - start.alpha) * fraction
-    )
-}
-
-//// Helper function for color interpolation
-//fun lerp(start: Color, end: Color, fraction: Float): Color {
-//    return Color(
-//        red = start.red + (end.red - start.red) * fraction,
-//        green = start.green + (end.green - start.green) * fraction,
-//        blue = start.blue + (end.blue - start.blue) * fraction,
-//        alpha = start.alpha + (end.alpha - start.alpha) * fraction
-//    )
-//}
 @Preview(showBackground = true, heightDp = 300, widthDp = 150)
 @Composable
 fun MusicGPTAppPreview() {
