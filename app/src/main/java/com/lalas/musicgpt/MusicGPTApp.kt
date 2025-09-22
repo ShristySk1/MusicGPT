@@ -410,7 +410,7 @@ fun MusicGPTApp() {
                             .fillMaxWidth()
                             .height(52.dp),
                         isActive = true, // or based on focus state
-                        borderWidth = 1.dp,
+                        borderWidth = 2.dp,
                         cornerRadius = 26.dp
                     ) {
                         Row(
